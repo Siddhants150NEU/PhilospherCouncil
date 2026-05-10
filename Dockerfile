@@ -1,7 +1,7 @@
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  Stage 1 — Build the Vite frontend                                          ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
-FROM node:20.11-alpine AS frontend-builder
+FROM node:20.11-slim AS frontend-builder
 
 WORKDIR /build/frontend
 
@@ -19,7 +19,7 @@ RUN npm run build
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  Stage 2 — Build the TypeScript backend                                     ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
-FROM node:20.11-alpine AS backend-builder
+FROM node:20.11-slim AS backend-builder
 
 WORKDIR /build/backend
 
@@ -34,10 +34,10 @@ RUN npm run build
 # ╔══════════════════════════════════════════════════════════════════════════════╗
 # ║  Stage 3 — Lean production image                                            ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
-FROM node:20.11-alpine AS production
+FROM node:20.11-slim AS production
 
-# Security: run as non-root user
-RUN addgroup -S council && adduser -S council -G council
+# Security: run as non-root user (Debian-slim user-creation syntax)
+RUN groupadd --system council && useradd --system --gid council council
 
 WORKDIR /app
 
@@ -54,7 +54,14 @@ COPY --from=backend-builder /build/backend/dist ./dist
 # and then frontend/dist = /app/frontend/dist
 COPY --from=frontend-builder /build/frontend/dist ./frontend/dist
 
-# Create data directory and set permissions
+# Pre-download the local embedding model into the image so the container is
+# offline-capable and the first /api/retrieve call has no cold-download stall.
+# Cache lives in /app/.hf-cache (a layer in the image, not on the volume).
+ENV HF_HOME=/app/.hf-cache
+RUN mkdir -p /app/.hf-cache \
+    && node -e "import('@huggingface/transformers').then(m => m.pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2')).then(()=>console.log('[prefetch] model cached'))"
+
+# Create data directory and set permissions (covers .hf-cache too)
 RUN mkdir -p /app/data && chown -R council:council /app
 
 USER council
@@ -62,9 +69,9 @@ USER council
 # Expose the API / static-file server port
 EXPOSE 3001
 
-# Health check — lightweight ping against the health endpoint
+# Health check — lightweight node-native HTTP probe (slim doesn't ship wget/curl)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- http://localhost:3001/api/health || exit 1
+  CMD node -e "require('http').get('http://localhost:3001/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 ENV NODE_ENV=production
 ENV PORT=3001

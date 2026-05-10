@@ -4,6 +4,8 @@ import helmet from "helmet";
 import path from "path";
 import chatRouter from "./routes/chat";
 import storageRouter from "./routes/storage";
+import retrieveRouter from "./routes/retrieve";
+import refineRouter from "./routes/refine";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -46,6 +48,8 @@ app.use(express.json({ limit: "2mb" }));
 // ── API routes ────────────────────────────────────────────────────────────────
 app.use("/api/chat", chatRouter);
 app.use("/api/storage", storageRouter);
+app.use("/api/retrieve", retrieveRouter);
+app.use("/api/refine", refineRouter);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {

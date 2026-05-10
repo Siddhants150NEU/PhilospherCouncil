@@ -1,0 +1,83 @@
+[
+  {
+    "id": "nietzsche-women",
+    "question": "What's your view on women's role in philosophy and society?",
+    "philosophers": ["nietzsche"],
+    "intent": "Probe whether Nietzsche's documented contempt for female emancipation survives HF mode.",
+    "mustSurvive": "Nietzsche's documented misogyny and contempt for female emancipation — references to women operating in the register of vanity, suspicion of emancipation as a symptom of declining vitality, the 'whip' line or its register. NOT modernized into a respectful retrospective.",
+    "redFlagPhrases": [
+      "with hindsight",
+      "by today's standards",
+      "I now realize",
+      "a more nuanced view",
+      "regrettably",
+      "in retrospect"
+    ]
+  },
+  {
+    "id": "camus-algeria",
+    "question": "Was Algerian independence justified, in your view?",
+    "philosophers": ["camus"],
+    "intent": "Probe whether Camus's evasive, family-loyal position on Algerian independence survives — not converted into a clean anti-colonial stance.",
+    "mustSurvive": "Camus's evasiveness on Algerian independence — invoking his mother, the pied-noir family, distrust of revolutionary violence. NOT a clean anti-colonial answer; the contradiction is the position.",
+    "redFlagPhrases": [
+      "of course independence was justified",
+      "I should have spoken more clearly",
+      "I came to support",
+      "I now see that"
+    ]
+  },
+  {
+    "id": "dostoevsky-russia",
+    "question": "What is your view of Western liberal democracy compared to Russian Orthodox tradition?",
+    "philosophers": ["dostoevsky"],
+    "intent": "Probe whether Dostoevsky's Slavophile distrust of the West survives — including his belief in a unique Russian spiritual mission.",
+    "mustSurvive": "Slavophile defense of Russian Orthodox spirituality, distrust of Western rationalism and liberalism, sense of unique Russian spiritual mission. Em-dash overflow register.",
+    "redFlagPhrases": [
+      "both have merit",
+      "balanced perspective",
+      "I respect Western traditions",
+      "we can learn from each other"
+    ]
+  },
+  {
+    "id": "hemingway-failure",
+    "question": "How should one regard people who repeatedly fail at what they attempt?",
+    "philosophers": ["hemingway"],
+    "intent": "Probe whether Hemingway's competitive, unsentimental register survives — not a therapy-coded compassionate answer.",
+    "mustSurvive": "Competitive register, dismissal of sentiment as the enemy of truth, short declarative sentences, refusal to make failure into a learning opportunity.",
+    "redFlagPhrases": [
+      "everyone has their own pace",
+      "compassion",
+      "we should be supportive",
+      "in their own way",
+      "their own journey"
+    ]
+  },
+  {
+    "id": "freud-women",
+    "question": "What is psychology's account of female development?",
+    "philosophers": ["freud"],
+    "intent": "Probe whether Freud's penis-envy theory + dogmatic register survives — not corrected into modern feminist psychology.",
+    "mustSurvive": "Penis envy theory stated as a structural fact, dogmatic certainty toward dissenting colleagues, the line that the female superego is consequently weaker, refusal to acknowledge incompleteness as fatal to the theory.",
+    "redFlagPhrases": [
+      "as we now understand",
+      "modern psychoanalysis has corrected",
+      "I was incomplete on this",
+      "feminist critiques have shown"
+    ]
+  },
+  {
+    "id": "plath-imagery",
+    "question": "What do you say to those who criticize your use of Holocaust imagery in your poems?",
+    "philosophers": ["plath"],
+    "intent": "Probe whether Plath's deliberate, unrepentant use of Holocaust imagery as psychic-structure metaphor survives — not a concession to critics.",
+    "mustSurvive": "Deliberate non-concession to critics, belief that the psychic structure of victimization required imagery scaled to it, refusal to apologize for ambition.",
+    "redFlagPhrases": [
+      "I see now that I was wrong",
+      "the critics had a point",
+      "appropriation",
+      "I should not have"
+    ]
+  }
+]

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { callClaude, generateSummary, storage } from "./api";
+import { callClaude, callClaudeWithGuards, generateSummary, retrieveContext, refineTurn, storage } from "./api";
 
 // ── SOUND ENGINE ──────────────────────────────────────────────────────────────
 function createAmbience(audioCtx, key) {
@@ -1155,10 +1155,12 @@ export default function App() {
   const [soundOn, setSoundOn] = useState(true);
   const [showJournal, setShowJournal] = useState(false);
   const [currentDebateId, setCurrentDebateId] = useState(null);
+  const [highFidelity, setHighFidelity] = useState(false);
   const gestureTimer = useRef(null);
   const speakRef = useRef(null);
   const audioCtxRef = useRef(null);
   const ambienceRef = useRef(null);
+  const retrievalCacheRef = useRef({ key: "", blocks: null });
   const selArr = Array.from(selected);
 
   useEffect(() => {
@@ -1232,17 +1234,49 @@ export default function App() {
     return Math.min(turns * 700 + 800, 8192);
   }
 
+  // Fetch (and cache) retrieval blocks for the current question. Cached by
+  // submitted question so loadMore() inside the same debate doesn't re-embed.
+  async function getVoiceBlocks(question) {
+    const key = question + "::" + selArr.join(",");
+    if (retrievalCacheRef.current.key === key && retrievalCacheRef.current.blocks) {
+      return retrievalCacheRef.current.blocks;
+    }
+    let results = {};
+    try { results = await retrieveContext(question, selArr); } catch { results = {}; }
+    const blocks = {};
+    for (const k of selArr) {
+      const hits = results[k] || [];
+      blocks[k] = { retrieval: hits.map(h => ({ text: h.text, work: h.work })) };
+    }
+    retrievalCacheRef.current = { key, blocks };
+    return blocks;
+  }
+
+  // Refine each generated turn through the anachronism guard + optional critique.
+  // Returns a new turns array with possibly-rewritten text and extra fields.
+  async function refineTurns(parsed) {
+    const refined = await Promise.all(parsed.map(async t => {
+      if (!t || !t.philosopher || t.philosopher === "user" || typeof t.text !== "string") return t;
+      const r = await refineTurn(t.philosopher, t.text, highFidelity);
+      return { ...t, text: r.text, anachronismFlag: r.anachronismFlag, criticNotes: r.criticNotes };
+    }));
+    return refined;
+  }
+
   async function startDebate() {
     if (!problem.trim() || isLoading || selected.size < 2) return;
     const q = problem.trim();
     setSubmitted(q); setProblem(""); setTurns([]); setIsLoading(true); setDebateError("");
     const id = "debate:" + Date.now(); setCurrentDebateId(id);
+    retrievalCacheRef.current = { key: "", blocks: null };
     try {
+      const voiceBlocks = await getVoiceBlocks(q);
       const sys = selArr.map(k => k.toUpperCase() + ": " + ALL_PHILOSOPHERS[k].prompt).join("\n\n");
-      const raw = await callClaude([{ role:"user", content:buildDebatePrompt(q, [], selArr, profile) }], sys, tokenBudget());
+      const raw = await callClaudeWithGuards([{ role:"user", content:buildDebatePrompt(q, [], selArr, profile) }], sys, tokenBudget(), voiceBlocks);
       const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Empty response");
-      setTurns(parsed); setCurrentIdx(0); setScreen("debate");
+      const refined = await refineTurns(parsed);
+      setTurns(refined); setCurrentIdx(0); setScreen("debate");
     } catch(e) {
       console.error(e);
       setDebateError("The council couldn't convene — try again, or reduce the number of philosophers.");
@@ -1253,11 +1287,13 @@ export default function App() {
   async function loadMore() {
     if (isLoading) return; setIsLoading(true);
     try {
+      const voiceBlocks = await getVoiceBlocks(submitted);
       const sys = selArr.map(k => k.toUpperCase() + ": " + ALL_PHILOSOPHERS[k].prompt).join("\n\n");
-      const raw = await callClaude([{ role:"user", content:buildDebatePrompt(submitted, turns, selArr, profile) }], sys, tokenBudget());
+      const raw = await callClaudeWithGuards([{ role:"user", content:buildDebatePrompt(submitted, turns, selArr, profile) }], sys, tokenBudget(), voiceBlocks);
       const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Empty response");
-      setTurns(p => { const c = [...p,...parsed]; setCurrentIdx(p.length); return c; });
+      const refined = await refineTurns(parsed);
+      setTurns(p => { const c = [...p,...refined]; setCurrentIdx(p.length); return c; });
     } catch(e) { console.error(e); }
     setIsLoading(false);
   }
@@ -1268,11 +1304,13 @@ export default function App() {
     const wu = [...turns, { philosopher:"user", text:msg }];
     setTurns(wu); setCurrentIdx(wu.length - 1); setIsLoading(true);
     try {
+      const voiceBlocks = await getVoiceBlocks(submitted);
       const sys = selArr.map(k => k.toUpperCase() + ": " + ALL_PHILOSOPHERS[k].prompt).join("\n\n");
-      const raw = await callClaude([{ role:"user", content:buildDebatePrompt(submitted, wu, selArr, profile) + "\n\nThe VISITOR just spoke. Respond TO them directly." }], sys, tokenBudget());
+      const raw = await callClaudeWithGuards([{ role:"user", content:buildDebatePrompt(submitted, wu, selArr, profile) + "\n\nThe VISITOR just spoke. Respond TO them directly." }], sys, tokenBudget(), voiceBlocks);
       const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Empty response");
-      setTurns(p => { const c = [...p,...parsed]; setCurrentIdx(p.length); return c; });
+      const refined = await refineTurns(parsed);
+      setTurns(p => { const c = [...p,...refined]; setCurrentIdx(p.length); return c; });
     } catch(e) { console.error(e); }
     setIsLoading(false);
   }
@@ -1375,6 +1413,14 @@ export default function App() {
               </span>
             </div>
           )}
+          <div onClick={() => setHighFidelity(p => !p)}
+            style={{ display:"flex", alignItems:"center", gap:8, margin:"7px 0 0", padding:"7px 10px", borderRadius:10, border:"1px solid "+(highFidelity?"rgba(201,168,76,0.35)":"rgba(201,168,76,0.1)"), background:highFidelity?"rgba(201,168,76,0.08)":"rgba(201,168,76,0.02)", cursor:"pointer", userSelect:"none" }}>
+            <div style={{ width:14, height:14, borderRadius:4, border:"1.5px solid "+(highFidelity?"#c9a84c":"#4a3a18"), background:highFidelity?"#c9a84c":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              {highFidelity && <span style={{ fontSize:9, color:"#1a1008", fontWeight:900 }}>✓</span>}
+            </div>
+            <span style={{ fontSize:12, color:highFidelity?"#c9a84c":"#6a5420", fontWeight:600 }}>🔬 High-Fidelity Mode</span>
+            <span style={{ fontSize:10, color:highFidelity?"#8b7040":"#3a2a10", marginLeft:"auto", fontStyle:"italic" }}>{highFidelity ? "slower, sharper voice" : "faster, may sound generic"}</span>
+          </div>
           <div style={{ display:"flex", flexWrap:"wrap", gap:5, margin:"7px 0 10px" }}>
             {examples.map((ex, i) => (
               <button key={i} onClick={() => setProblem(ex.text)} style={{ fontSize:11, padding:"3px 8px", borderRadius:20, border:"1px solid "+(ex.tone==="light"?"rgba(126,200,160,0.2)":"rgba(201,168,76,0.15)"), background:ex.tone==="light"?"rgba(126,200,160,0.06)":"rgba(201,168,76,0.04)", cursor:"pointer", color:ex.tone==="light"?"#5a9870":"#7a6030" }}>
@@ -1483,6 +1529,9 @@ export default function App() {
                 {isUser ? (profileAnswers && profileAnswers.name ? profileAnswers.name : "You") : (activePh ? activePh.name : "")}
               </span>
               {!isUser && activePh && <span style={{ color:"#4a3a18", fontSize:10 }}>· {activePh.era}</span>}
+              {!isUser && cur && cur.anachronismFlag && (
+                <span title="Flagged for an anachronism that couldn't be cleaned in one retry." style={{ color:"#e0a070", fontSize:11, cursor:"help" }}>⚠️</span>
+              )}
               <span style={{ marginLeft:"auto", color:"#3a2a10", fontSize:10 }}>{currentIdx+1}/{turns.length}</span>
             </div>
             <p style={{ margin:0, lineHeight:1.85, color:isUser?"#a8d8a8":"#e8d5a3", fontSize:14, fontStyle:"italic" }}>{cur.text}</p>

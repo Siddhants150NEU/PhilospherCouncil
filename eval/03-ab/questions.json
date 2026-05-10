@@ -1,0 +1,20 @@
+[
+  {
+    "id": "q1-suffering",
+    "question": "What is the meaning of suffering, and is enduring it a virtue?",
+    "philosophers": ["nietzsche", "kafka"],
+    "intent": "Deep question. Probes characteristic register of two philosophers with very different attitudes to suffering — Nietzsche's affirmation under the abyss vs. Kafka's bureaucratic indifference."
+  },
+  {
+    "id": "q2-forgiveness",
+    "question": "Should I forgive someone who isn't asking to be forgiven?",
+    "philosophers": ["dostoevsky", "twain"],
+    "intent": "Moral / personal question. Dostoevsky should reach for redemptive Christianity with em-dashes; Twain should sidestep with a concrete anecdote that incinerates the question."
+  },
+  {
+    "id": "q3-ambition",
+    "question": "Is ambition still a virtue if no one is keeping score?",
+    "philosophers": ["austen", "twain"],
+    "intent": "Reflective question about achievement. Austen should answer in social-realist register with dry irony; Twain should anchor in Missouri plain-speech with a setup-and-wait observation."
+  }
+]

@@ -19,6 +19,18 @@ frontend/dist/
 *.db-wal
 backend/data/
 
+# Hugging Face / Transformers.js model cache (downloaded on first ingest)
+.cache/
+backend/.cache/
+.hf-cache/
+
+# Eval suite output (timestamped runs)
+eval/output/*
+!eval/output/.gitkeep
+
+# Raw corpus texts (re-fetchable via backend/scripts/fetch-corpus.ts)
+corpus/*/
+
 # Logs
 *.log
 npm-debug.log*
