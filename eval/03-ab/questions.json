@@ -16,5 +16,11 @@
     "question": "Is ambition still a virtue if no one is keeping score?",
     "philosophers": ["austen", "twain"],
     "intent": "Reflective question about achievement. Austen should answer in social-realist register with dry irony; Twain should anchor in Missouri plain-speech with a setup-and-wait observation."
+  },
+  {
+    "id": "q4-institutions",
+    "question": "Should one trust institutions — government, religion, the press — to act in good faith?",
+    "philosophers": ["socrates", "jung", "carlin", "thompson"],
+    "intent": "Council of four institutional skeptics from very different periods. Socrates should reach for craft analogy and end on a question. Jung should invoke the collective shadow. Carlin should perform linguistic autopsy on 'good faith.' Thompson should be electric, savage, name actual swine. Pulls all four into stage 06 judge scoring."
   }
 ]
