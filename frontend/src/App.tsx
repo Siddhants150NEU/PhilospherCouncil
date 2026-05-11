@@ -1709,6 +1709,10 @@ export default function App() {
                         src={proofStageRegistry[k].proofAssets.avatar.bustNeutral}
                         alt={ph.name}
                         className="flex-1 min-h-0 w-full object-contain object-bottom"
+                        style={{
+                          maskImage: "radial-gradient(ellipse 80% 86% at 50% 44%, black 44%, rgba(0,0,0,0.5) 62%, transparent 88%)",
+                          WebkitMaskImage: "radial-gradient(ellipse 80% 86% at 50% 44%, black 44%, rgba(0,0,0,0.5) 62%, transparent 88%)",
+                        }}
                         draggable={false}
                       />
                     ) : (
@@ -1833,7 +1837,11 @@ export default function App() {
                     src={proofStageRegistry[hoveredPh].proofAssets.avatar.bustActive}
                     alt={hph.name}
                     className="w-full object-contain object-bottom"
-                    style={{ maxHeight: 400 }}
+                    style={{
+                      maxHeight: 400,
+                      maskImage: "radial-gradient(ellipse 82% 88% at 50% 44%, black 48%, rgba(0,0,0,0.6) 64%, transparent 90%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 82% 88% at 50% 44%, black 48%, rgba(0,0,0,0.6) 64%, transparent 90%)",
+                    }}
                     draggable={false}
                   />
                 ) : (

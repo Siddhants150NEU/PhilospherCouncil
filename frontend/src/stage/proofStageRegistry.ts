@@ -4,11 +4,16 @@ export type ProofStagePhilosopherKey =
   | "camus"
   | "kafka"
   | "hemingway"
+  | "dostoevsky"
+  | "socrates"
   | "nietzsche"
   | "jung"
+  | "twain"
+  | "austen"
   | "thompson"
   | "carlin"
-  | "plath";
+  | "plath"
+  | "freud";
 
 export interface ProofStageLayerSpec {
   id: "back" | "mid" | "front" | "fx" | "shadow";
@@ -306,6 +311,82 @@ export const proofStageRegistry: Record<ProofStagePhilosopherKey, ProofStageMani
       fallbackSize: 280,
     },
   }),
+  dostoevsky: buildManifest({
+    key: "dostoevsky",
+    displayName: "Dostoevsky",
+    root: "/assets/dostoevsky",
+    styleDirection:
+      "Anime-esque painterly character art with Russian spiritual crisis, penitential darkness, and ember-lit sacred ruin atmosphere.",
+    titleColor: "#d39a6a",
+    stageMoodLabels: {
+      ruin: "Penitential Crypt",
+      hush: "Cathedral Hush",
+    },
+    sceneTitle: "Dostoevsky Proof Stage",
+    sceneDescription:
+      "A heavier temple-cathedral chamber with cryptlike shadow, fevered amber light, and Russian spiritual volatility pressed into stone.",
+    idleCue: "Fragile stillness, prison-memory tension, faith and ruin sharing one body.",
+    speakingCue: "Volcanic argument, pained tenderness, a soul speaking under judgment.",
+    reflectingCue: "Folded inward, listening to the underground self and the possibility of grace.",
+    exportRules: [
+      "Transparent WebP or PNG.",
+      "Keep Dostoevsky in worn 19th-century Russian civilian clothing, never monastic costume.",
+      "Preserve the gaunt beard, poverty, and spiritual volatility across all states.",
+    ],
+    presentation: {
+      actorSizing: {
+        idle: "min(625px, 46vw, 62vh)",
+        speaking: "min(650px, 48vw, 64vh)",
+        reflecting: "min(540px, 42vw, 56vh)",
+      },
+      actorPlacementClass: {
+        idle: "translate-y-16 md:translate-y-20",
+        speaking: "translate-y-16 md:translate-y-20",
+        reflecting: "translate-y-10 md:translate-y-14",
+      },
+      environmentObjectPosition: "center 39%",
+      titleColor: "#d39a6a",
+      fallbackSize: 280,
+    },
+  }),
+  socrates: buildManifest({
+    key: "socrates",
+    displayName: "Socrates",
+    root: "/assets/socrates",
+    styleDirection:
+      "Anime-esque painterly character art with grounded Athenian humanity, civic daylight, and lucid Greek sacred architecture.",
+    titleColor: "#d8b57a",
+    stageMoodLabels: {
+      ruin: "Athenian Portico",
+      hush: "Temple Hush",
+    },
+    sceneTitle: "Socrates Proof Stage",
+    sceneDescription:
+      "A more open Athenian temple-portico stage with civic calm, daylight clarity, and human-scaled philosophical gravity.",
+    idleCue: "Ordinary body, extraordinary calm, irony held without display.",
+    speakingCue: "Questioning hand, civic ease, contradiction revealed without violence.",
+    reflectingCue: "Relaxed inward testing of the thought, still alert to the answer beneath it.",
+    exportRules: [
+      "Transparent WebP or PNG.",
+      "Keep Socrates poor, human, and weathered rather than idealized or divine.",
+      "Preserve simple drapery, sandals, and the ordinary-citizen silhouette.",
+    ],
+    presentation: {
+      actorSizing: {
+        idle: "min(630px, 47vw, 62vh)",
+        speaking: "min(655px, 49vw, 64vh)",
+        reflecting: "min(540px, 42vw, 56vh)",
+      },
+      actorPlacementClass: {
+        idle: "translate-y-14 md:translate-y-18",
+        speaking: "translate-y-14 md:translate-y-18",
+        reflecting: "translate-y-8 md:translate-y-12",
+      },
+      environmentObjectPosition: "center 41%",
+      titleColor: "#d8b57a",
+      fallbackSize: 280,
+    },
+  }),
   nietzsche: buildManifest({
     key: "nietzsche",
     displayName: "Nietzsche",
@@ -379,6 +460,82 @@ export const proofStageRegistry: Record<ProofStagePhilosopherKey, ProofStageMani
       },
       environmentObjectPosition: "center 40%",
       titleColor: "#ccb78d",
+      fallbackSize: 280,
+    },
+  }),
+  twain: buildManifest({
+    key: "twain",
+    displayName: "Twain",
+    root: "/assets/twain",
+    styleDirection:
+      "Anime-esque painterly character art with American plain-spoken irony, river-light warmth, and humane sacred-ruin atmosphere.",
+    titleColor: "#d6b07c",
+    stageMoodLabels: {
+      ruin: "Riverlight Hall",
+      hush: "Cathedral Hush",
+    },
+    sceneTitle: "Twain Proof Stage",
+    sceneDescription:
+      "A lighter temple-cathedral chamber with broad floor space, warm riverlike side light, and a humane melancholy under the wit.",
+    idleCue: "Relaxed watchfulness, joke waiting beneath the sentence.",
+    speakingCue: "Polite explanation with a quiet knife hidden inside it.",
+    reflectingCue: "The wit falls back and the human sadness remains in view.",
+    exportRules: [
+      "Transparent WebP or PNG.",
+      "Keep Twain in a white suit and older American civilian silhouette, never folksy caricature.",
+      "Preserve the wild white hair and sly humane expression across all states.",
+    ],
+    presentation: {
+      actorSizing: {
+        idle: "min(625px, 46vw, 61vh)",
+        speaking: "min(650px, 48vw, 63vh)",
+        reflecting: "min(540px, 42vw, 56vh)",
+      },
+      actorPlacementClass: {
+        idle: "translate-y-14 md:translate-y-18",
+        speaking: "translate-y-14 md:translate-y-18",
+        reflecting: "translate-y-8 md:translate-y-12",
+      },
+      environmentObjectPosition: "center 40%",
+      titleColor: "#d6b07c",
+      fallbackSize: 280,
+    },
+  }),
+  austen: buildManifest({
+    key: "austen",
+    displayName: "Austen",
+    root: "/assets/austen",
+    styleDirection:
+      "Anime-esque painterly character art with composed social intelligence, refined proportional space, and soft temple-daylight restraint.",
+    titleColor: "#cfa8c4",
+    stageMoodLabels: {
+      ruin: "Drawing-Room Order",
+      hush: "Cathedral Hush",
+    },
+    sceneTitle: "Austen Proof Stage",
+    sceneDescription:
+      "A cleaner, more graceful temple-cathedral space where measured architecture and soft light carry wit, manners, and judgment.",
+    idleCue: "Poised reserve, exact posture, everyone already quietly assessed.",
+    speakingCue: "Perfect manners carrying precise social incision.",
+    reflectingCue: "Private revision of the room from within disciplined composure.",
+    exportRules: [
+      "Transparent WebP or PNG.",
+      "Keep Austen Regency and restrained, never fantasy-princess or aristocratic spectacle.",
+      "Preserve modest silhouette, social precision, and controlled expression.",
+    ],
+    presentation: {
+      actorSizing: {
+        idle: "min(590px, 44vw, 58vh)",
+        speaking: "min(610px, 45vw, 60vh)",
+        reflecting: "min(520px, 40vw, 53vh)",
+      },
+      actorPlacementClass: {
+        idle: "translate-y-12 md:translate-y-16",
+        speaking: "translate-y-12 md:translate-y-16",
+        reflecting: "translate-y-6 md:translate-y-10",
+      },
+      environmentObjectPosition: "center 40%",
+      titleColor: "#cfa8c4",
       fallbackSize: 280,
     },
   }),
@@ -496,6 +653,44 @@ export const proofStageRegistry: Record<ProofStagePhilosopherKey, ProofStageMani
       fallbackSize: 280,
     },
   }),
+  freud: buildManifest({
+    key: "freud",
+    displayName: "Freud",
+    root: "/assets/freud",
+    styleDirection:
+      "Anime-esque painterly character art with Viennese analytic pressure, cigar-smoke interiority, and temple-cathedral depth turned inward.",
+    titleColor: "#d6b08b",
+    stageMoodLabels: {
+      ruin: "Analytic Chamber",
+      hush: "Cathedral Hush",
+    },
+    sceneTitle: "Freud Proof Stage",
+    sceneDescription:
+      "A darker temple-cathedral chamber with recessed analytic depth, smoke, amber privacy, and architectural pressure suggestive of the unconscious.",
+    idleCue: "Composed distrust, cigar smoke, the objection already filed as evidence.",
+    speakingCue: "Measured clinical explanation, one hand lifting the symptom into theory.",
+    reflectingCue: "Hearing the repressed thing before anyone else is ready to say it.",
+    exportRules: [
+      "Transparent WebP or PNG.",
+      "Keep Freud modern, Viennese, and analytic, never occult or priestly.",
+      "Preserve the beard, spectacles, cigar, and formal suit silhouette.",
+    ],
+    presentation: {
+      actorSizing: {
+        idle: "min(610px, 45vw, 60vh)",
+        speaking: "min(635px, 47vw, 62vh)",
+        reflecting: "min(530px, 41vw, 54vh)",
+      },
+      actorPlacementClass: {
+        idle: "translate-y-16 md:translate-y-20",
+        speaking: "translate-y-16 md:translate-y-20",
+        reflecting: "translate-y-10 md:translate-y-14",
+      },
+      environmentObjectPosition: "center 39%",
+      titleColor: "#d6b08b",
+      fallbackSize: 280,
+    },
+  }),
 };
 
 export function isProofStagePhilosopherKey(value: string): value is ProofStagePhilosopherKey {
@@ -503,10 +698,15 @@ export function isProofStagePhilosopherKey(value: string): value is ProofStagePh
     value === "camus" ||
     value === "kafka" ||
     value === "hemingway" ||
+    value === "dostoevsky" ||
+    value === "socrates" ||
     value === "nietzsche" ||
     value === "jung" ||
+    value === "twain" ||
+    value === "austen" ||
     value === "thompson" ||
     value === "carlin" ||
-    value === "plath"
+    value === "plath" ||
+    value === "freud"
   );
 }
