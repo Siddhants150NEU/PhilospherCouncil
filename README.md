@@ -427,7 +427,7 @@ Every system prompt in `App.tsx` ends with an explicit instruction: **do not san
 
 ## License
 
-To be decided. Until then: don't ship this commercially without asking.
+TBD.
 
 ---
 
