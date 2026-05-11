@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { callClaude, callClaudeWithGuards, generateSummary, retrieveContext, refineTurn, storage } from "./api";
+import { PhilosopherMiniAvatar, PhilosopherProofStage } from "./stage/PhilosopherProofStage";
+import { PROOF_STAGE_STATE_CYCLE, isProofStagePhilosopherKey, proofStageRegistry } from "./stage/proofStageRegistry";
 
 // ── SOUND ENGINE ──────────────────────────────────────────────────────────────
 function createAmbience(audioCtx, key) {
@@ -77,6 +79,117 @@ function createAmbience(audioCtx, key) {
     fadeOut(d) { gainMaster.gain.linearRampToValueAtTime(0, audioCtx.currentTime + (d || 1)); },
     stop() { allNodes.forEach(n => { try { if (n.stop) n.stop(); else if (n.disconnect) n.disconnect(); } catch(e) {} }); }
   };
+}
+
+// ── TEMPLE ORNAMENTS — Greek architectural decorations ───────────────────────
+// Pediment: triangular Doric-style cap with a central rosette + cornice lines.
+// Used above the brand mark to evoke a temple façade.
+function PedimentDoric({ width }: { width?: number }) {
+  const w = width || 320;
+  const h = Math.round(w * 0.28);
+  return (
+    <svg width={w} height={h} viewBox="0 0 320 90" fill="none" aria-hidden="true">
+      {/* Triangular pediment outline */}
+      <path
+        d="M30 78 L160 12 L290 78 Z"
+        stroke="#d4af37"
+        strokeOpacity="0.45"
+        strokeWidth="1.2"
+        fill="rgba(212,175,55,0.04)"
+      />
+      {/* Cornice underline (entablature) */}
+      <line x1="20" y1="82" x2="300" y2="82" stroke="#d4af37" strokeOpacity="0.55" strokeWidth="1.2" />
+      <line x1="14" y1="86" x2="306" y2="86" stroke="#d4af37" strokeOpacity="0.35" strokeWidth="0.8" />
+      {/* Central rosette */}
+      <circle cx="160" cy="50" r="6" stroke="#d4af37" strokeOpacity="0.55" strokeWidth="1" fill="none" />
+      <circle cx="160" cy="50" r="2" fill="#d4af37" fillOpacity="0.5" />
+      {/* Inner triangle echo */}
+      <path
+        d="M60 76 L160 24 L260 76"
+        stroke="#d4af37"
+        strokeOpacity="0.22"
+        strokeWidth="0.8"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+// Doric column silhouette — fluted shaft with simple capital + base.
+// Drawn at very low opacity so it suggests temple architecture behind the
+// active speaker without competing for visual attention.
+function DoricColumn({ height }: { height?: number }) {
+  const h = height || 280;
+  const w = Math.round(h * 0.18);
+  return (
+    <svg
+      width={w}
+      height={h}
+      viewBox="0 0 50 280"
+      fill="none"
+      aria-hidden="true"
+      preserveAspectRatio="none">
+      {/* Capital — abacus (top slab) + echinus (curved cushion) */}
+      <rect x="2" y="0" width="46" height="6" stroke="#d4af37" strokeOpacity="0.45" fill="rgba(212,175,55,0.05)" />
+      <path d="M6 6 Q 6 14 12 16 L 38 16 Q 44 14 44 6 Z" stroke="#d4af37" strokeOpacity="0.4" strokeWidth="0.8" fill="rgba(212,175,55,0.04)" />
+      {/* Shaft — outer outline */}
+      <rect x="12" y="16" width="26" height="238" stroke="#d4af37" strokeOpacity="0.35" strokeWidth="0.8" fill="rgba(212,175,55,0.02)" />
+      {/* Vertical flutes — five grooves down the shaft */}
+      {[16, 20, 24, 28, 32, 36].map((x) => (
+        <line key={x} x1={x} y1="18" x2={x} y2="252" stroke="#d4af37" strokeOpacity="0.28" strokeWidth="0.6" />
+      ))}
+      {/* Base — torus + plinth */}
+      <path d="M8 254 Q 8 262 14 264 L 36 264 Q 42 262 42 254 Z" stroke="#d4af37" strokeOpacity="0.4" strokeWidth="0.8" fill="rgba(212,175,55,0.04)" />
+      <rect x="2" y="264" width="46" height="6" stroke="#d4af37" strokeOpacity="0.45" fill="rgba(212,175,55,0.05)" />
+      <rect x="0" y="270" width="50" height="10" stroke="#d4af37" strokeOpacity="0.45" fill="rgba(212,175,55,0.06)" />
+    </svg>
+  );
+}
+
+// Laurel sprig: a curving stem with paired leaves.
+// `flip` mirrors it for placement on the opposite side of a brand mark.
+function LaurelSprig({ width, flip }: { width?: number; flip?: boolean }) {
+  const w = width || 60;
+  const h = Math.round(w * 0.55);
+  return (
+    <svg
+      width={w}
+      height={h}
+      viewBox="0 0 80 44"
+      fill="none"
+      aria-hidden="true"
+      style={flip ? { transform: "scaleX(-1)" } : undefined}>
+      {/* Stem curving from outer edge inward */}
+      <path
+        d="M4 22 Q 28 6 60 22 Q 70 26 76 22"
+        stroke="#d4af37"
+        strokeOpacity="0.55"
+        strokeWidth="1.1"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* Leaves along the stem, paired top + bottom */}
+      {[12, 22, 32, 44, 56, 66].map((x, i) => {
+        const yOff = i % 2 === 0 ? -6 : 6;
+        const rot = i % 2 === 0 ? -30 : 30;
+        return (
+          <g key={i} transform={`translate(${x},${22 + yOff}) rotate(${rot})`}>
+            <ellipse
+              cx="0"
+              cy="0"
+              rx="6"
+              ry="2.4"
+              fill="#d4af37"
+              fillOpacity={0.35 + (i % 3) * 0.06}
+              stroke="#d4af37"
+              strokeOpacity="0.6"
+              strokeWidth="0.5"
+            />
+          </g>
+        );
+      })}
+    </svg>
+  );
 }
 
 // ── SVG BODIES — each function is multiline to avoid transpiler issues ─────────
@@ -1044,30 +1157,50 @@ function ProfileScreen({ profile, onSave }) {
     onSave(built || "", ans);
   }
   return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0e0b08,#1a1208,#120e06)", fontFamily:"Georgia,serif", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", overflowY:"auto" }}>
-      <style>{`textarea:focus{outline:none}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#3a2a10;border-radius:3px}`}</style>
-      <div style={{ position:"fixed", top:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)" }}/>
-      <div style={{ maxWidth:520, width:"100%" }}>
-        <div style={{ textAlign:"center", marginBottom:24 }}>
-          <div style={{ fontSize:28, marginBottom:6 }}>📜</div>
-          <h2 style={{ color:"#e8d5a3", fontSize:20, fontWeight:700, margin:"0 0 6px" }}>Your Profile</h2>
-          <p style={{ color:"#6a5420", fontSize:13, margin:0 }}>The council will speak to <em>your</em> situation.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-surface-container-lowest font-body py-12 px-margin-mobile relative overflow-hidden marble-grain">
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 ambient-glow -z-10" />
+      <div className="w-full max-w-xl glass-panel rounded-xl p-6 md:p-8">
+        <div className="text-center mb-6 min-w-0">
+          <div className="hidden md:flex justify-center mb-2 opacity-90">
+            <PedimentDoric width={240} />
+          </div>
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-1">
+            <div className="hidden sm:block shrink-0"><LaurelSprig width={42} flip /></div>
+            <span className="material-symbols-outlined text-2xl sm:text-3xl text-primary shrink-0">account_balance</span>
+            <div className="hidden sm:block shrink-0"><LaurelSprig width={42} /></div>
+          </div>
+          <h2 className="font-display text-2xl sm:text-headline-md text-primary tracking-tight inscription whitespace-nowrap">Your Profile</h2>
+          <p className="font-label text-[10px] sm:text-label-sm text-primary/70 tracking-[0.25em] sm:tracking-[0.3em] uppercase mt-1 inscription-sm">A few quiet questions</p>
+          <div className="greek-meander-soft w-32 mx-auto mt-3" aria-hidden="true" />
+          <p className="font-body text-body-md text-on-surface-variant mt-3 px-2">The council will speak to <em className="text-primary/90">your</em> situation.</p>
         </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          {fields.map(f => (
-            <div key={f.key} style={{ background:"rgba(20,14,6,0.8)", border:"1px solid rgba(201,168,76,0.15)", borderRadius:12, padding:"12px 14px" }}>
-              <label style={{ display:"block", color:"#c9a84c", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>{f.label}</label>
-              <textarea value={ans[f.key]||""} onChange={e => setAns(p => ({...p,[f.key]:e.target.value}))} placeholder={f.placeholder} rows={2}
-                style={{ width:"100%", background:"rgba(255,245,220,0.03)", border:"1px solid rgba(201,168,76,0.1)", borderRadius:8, padding:"8px 10px", fontSize:13, fontFamily:"Georgia,serif", color:"#e8d5a3", resize:"vertical", boxSizing:"border-box", outline:"none" }}/>
+        <div className="flex flex-col gap-3">
+          {fields.map((f) => (
+            <div key={f.key} className="bg-surface-container-low border border-primary/15 rounded-xl px-4 py-3">
+              <label className="block font-label text-label-sm text-primary uppercase tracking-wider mb-2" htmlFor={`field-${f.key}`}>
+                {f.label}
+              </label>
+              <textarea
+                id={`field-${f.key}`}
+                value={ans[f.key] || ""}
+                onChange={(e) => setAns((p) => ({ ...p, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                rows={2}
+                className="field-input w-full rounded-lg px-3 py-2 font-body text-body-md resize-y"
+              />
             </div>
           ))}
         </div>
-        <div style={{ display:"flex", gap:10, marginTop:16 }}>
-          <button onClick={() => onSave(null, null)} style={{ flex:1, padding:"10px", borderRadius:10, border:"1px solid rgba(201,168,76,0.2)", background:"transparent", color:"#6a5420", fontSize:13, cursor:"pointer" }}>Skip</button>
-          <button onClick={save} style={{ flex:2, padding:"10px", borderRadius:10, border:"none", background:"linear-gradient(135deg,#5a3a08,#c9a84c,#8b6914)", color:"#1a1008", fontSize:14, fontWeight:700, cursor:"pointer" }}>Save & Continue →</button>
+        <div className="flex gap-3 mt-6">
+          <button onClick={() => onSave(null, null)} className="ghost-btn flex-1 py-3 rounded-xl font-label text-label-sm">
+            Skip
+          </button>
+          <button onClick={save} className="primary-btn flex-[2] py-3 rounded-xl font-label text-label-md uppercase tracking-widest flex items-center justify-center gap-2">
+            Save &amp; Continue
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
         </div>
       </div>
-      <div style={{ position:"fixed", bottom:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)" }}/>
     </div>
   );
 }
@@ -1095,47 +1228,93 @@ function LibraryScreen({ onClose, onResume, profileAnswers }) {
     setDebates(p => p.filter(d => d.key !== k));
   }
   return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0e0b08,#1a1208,#120e06)", fontFamily:"Georgia,serif", padding:"0 0 40px" }}>
-      <style>{`::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#3a2a10;border-radius:3px}`}</style>
-      <div style={{ position:"fixed", top:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)", zIndex:10 }}/>
-      <div style={{ maxWidth:620, margin:"0 auto", padding:"28px 20px" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24 }}>
-          <button onClick={onClose} style={{ padding:"7px 14px", borderRadius:10, border:"1px solid rgba(201,168,76,0.2)", background:"transparent", color:"#8b7040", fontSize:12, cursor:"pointer" }}>← Back</button>
-          <h2 style={{ color:"#e8d5a3", fontSize:20, fontWeight:700, margin:0 }}>📚 Your Library</h2>
+    <div className="min-h-screen flex flex-col bg-surface-container-lowest font-body marble-grain">
+      <header className="sticky top-0 z-50 bg-surface-container-lowest/90 backdrop-blur-md border-b border-primary/20">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-max-width mx-auto gap-3 sm:gap-4">
+          <button onClick={onClose} className="ghost-btn flex items-center gap-2 px-3 py-1.5 rounded-full shrink-0">
+            <span className="material-symbols-outlined text-base">arrow_back</span>
+            <span className="font-label text-label-sm hidden sm:inline">Back</span>
+          </button>
+          <div className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 px-2">
+            <div className="hidden sm:block shrink-0"><LaurelSprig width={36} flip /></div>
+            <span className="material-symbols-outlined text-xl sm:text-2xl text-primary shrink-0">menu_book</span>
+            <h1 className="font-display text-lg sm:text-headline-sm text-primary tracking-tight inscription-sm whitespace-nowrap">Your Library</h1>
+            <div className="hidden sm:block shrink-0"><LaurelSprig width={36} /></div>
+          </div>
+          <div className="w-12 sm:w-20" />
         </div>
-        {loading && <div style={{ color:"#6a5420", fontStyle:"italic", textAlign:"center", paddingTop:40 }}>Loading…</div>}
-        {!loading && debates.length === 0 && (
-          <div style={{ textAlign:"center", padding:"60px 20px", color:"#4a3820" }}>
-            <div style={{ fontSize:32, marginBottom:12 }}>📖</div>
-            <p style={{ fontSize:14, lineHeight:1.7 }}>No saved debates yet.<br/>Use ✍️ after a debate to save it.</p>
+        <div className="greek-meander w-full opacity-80" aria-hidden="true" />
+      </header>
+
+      <main className="flex-grow w-full max-w-3xl mx-auto px-margin-mobile py-8">
+        {loading && (
+          <div className="text-outline italic text-center py-16 flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined text-3xl text-primary/50 animate-pulse-soft">hourglass_empty</span>
+            Loading saved debates…
           </div>
         )}
-        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          {debates.map(d => (
-            <div key={d.key} onClick={() => onResume(d)} style={{ background:"rgba(20,14,6,0.85)", border:"1px solid rgba(201,168,76,0.18)", borderRadius:14, padding:"16px 18px", cursor:"pointer", position:"relative" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
-                <div style={{ fontSize:11, color:"#6a5420", textTransform:"uppercase", letterSpacing:1 }}>
-                  {new Date(d.timestamp).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+        {!loading && debates.length === 0 && (
+          <div className="text-center py-20 flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined text-5xl text-outline/50">menu_book</span>
+            <p className="font-body text-body-md text-on-surface-variant max-w-sm">
+              No saved debates yet. After a debate, tap <span className="material-symbols-outlined text-sm align-middle text-primary mx-1">edit_note</span>
+              to save it here.
+            </p>
+          </div>
+        )}
+        <div className="flex flex-col gap-3">
+          {debates.map((d) => (
+            <div
+              key={d.key}
+              onClick={() => onResume(d)}
+              className="glass-panel rounded-xl px-5 py-4 cursor-pointer hover:border-primary/40 transition-colors group">
+              <div className="flex justify-between items-start mb-2">
+                <div className="font-label text-label-sm text-outline uppercase tracking-wider">
+                  {new Date(d.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                 </div>
-                <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-                  <button onClick={e => { e.stopPropagation(); generateDebatePDF(d.problem, d.turns||[], d.selected||[], profileAnswers, d.timestamp, d.journal, d.summary); }}
-                    style={{ background:"rgba(201,168,76,0.1)", border:"1px solid rgba(201,168,76,0.25)", borderRadius:7, padding:"4px 9px", color:"#c9a84c", fontSize:11, cursor:"pointer", fontFamily:"Georgia,serif" }}>📄 PDF</button>
-                  <button onClick={e => del(d.key, e)} style={{ background:"transparent", border:"none", color:"#3a2a10", cursor:"pointer", fontSize:14 }}>✕</button>
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      generateDebatePDF(d.problem, d.turns || [], d.selected || [], profileAnswers, d.timestamp, d.journal, d.summary);
+                    }}
+                    className="pill-chip flex items-center gap-1 px-2.5 py-1 rounded-full font-label text-label-sm text-primary"
+                    title="Export as PDF">
+                    <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+                    PDF
+                  </button>
+                  <button
+                    onClick={(e) => del(d.key, e)}
+                    className="text-outline-variant hover:text-red-400 transition-colors p-1"
+                    title="Delete">
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
                 </div>
               </div>
-              <div style={{ color:"#e8d5a3", fontSize:14, fontStyle:"italic", marginBottom:8 }}>"{d.problem}"</div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                {(d.selected||[]).map(k => {
+              <div className="font-headline text-body-lg italic text-on-surface mb-3">&ldquo;{d.problem}&rdquo;</div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {(d.selected || []).map((k) => {
                   const ph = ALL_PHILOSOPHERS[k];
-                  return ph ? <span key={k} style={{ fontSize:10, padding:"2px 8px", borderRadius:10, background:ph.accent+"22", color:ph.accent, border:"1px solid "+ph.accent+"33" }}>{ph.name.split(" ").slice(-1)[0]}</span> : null;
+                  if (!ph) return null;
+                  return (
+                    <span
+                      key={k}
+                      className="font-label text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      style={{ background: ph.accent + "22", color: ph.accent, border: `1px solid ${ph.accent}44` }}>
+                      {ph.name.split(" ").slice(-1)[0]}
+                    </span>
+                  );
                 })}
               </div>
-              {d.summary && <div style={{ fontSize:12, color:"#8b7040", lineHeight:1.6, fontStyle:"italic", borderTop:"1px solid rgba(201,168,76,0.1)", paddingTop:8, marginTop:8 }}>{d.summary}</div>}
+              {d.summary && (
+                <div className="font-body text-label-sm text-on-surface-variant italic leading-relaxed border-t border-primary/10 pt-3 mt-2">
+                  {d.summary}
+                </div>
+              )}
             </div>
           ))}
         </div>
-      </div>
-      <div style={{ position:"fixed", bottom:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)" }}/>
+      </main>
     </div>
   );
 }
@@ -1151,25 +1330,49 @@ function JournalModal({ debateProblem, debateTurns, onClose, onSave }) {
       .catch(() => setLoading(false));
   }, []);
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:"linear-gradient(160deg,#1e1a0e,#16120a)", border:"1px solid rgba(201,168,76,0.3)", borderRadius:18, padding:24, maxWidth:520, width:"100%", maxHeight:"80vh", overflowY:"auto", boxShadow:"0 20px 60px rgba(0,0,0,0.7)" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-          <h3 style={{ color:"#e8d5a3", fontSize:16, fontWeight:700, margin:0 }}>✍️ Reflect on this debate</h3>
-          <button onClick={onClose} style={{ background:"transparent", border:"none", color:"#6a5420", cursor:"pointer", fontSize:18 }}>✕</button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-margin-mobile bg-black/75 backdrop-blur-sm font-body">
+      <div className="glass-panel rounded-xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-display text-headline-sm text-primary flex items-center gap-2 inscription-sm">
+            <LaurelSprig width={28} flip />
+            <span className="material-symbols-outlined">edit_note</span>
+            Reflect on this debate
+            <LaurelSprig width={28} />
+          </h3>
+          <button onClick={onClose} className="text-outline hover:text-primary transition-colors p-1" aria-label="Close">
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
-        <div style={{ color:"#6a5420", fontSize:12, fontStyle:"italic", marginBottom:16 }}>"{debateProblem}"</div>
-        <div style={{ background:"rgba(201,168,76,0.05)", border:"1px solid rgba(201,168,76,0.15)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:"#c9a84c", fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>What the council concluded</div>
-          {loading
-            ? <div style={{ color:"#4a3820", fontStyle:"italic", fontSize:13 }}>Distilling the debate…</div>
-            : <div style={{ color:"#e8d5a3", fontSize:13, lineHeight:1.7 }}>{summary}</div>}
+        <div className="greek-meander-soft w-full opacity-60 mb-3" aria-hidden="true" />
+        <div className="font-headline text-body-md italic text-on-surface-variant mb-4">&ldquo;{debateProblem}&rdquo;</div>
+
+        <div className="bg-primary/5 border border-primary/15 rounded-xl px-4 py-3 mb-4">
+          <div className="font-label text-label-sm text-primary uppercase tracking-wider mb-2">What the council concluded</div>
+          {loading ? (
+            <div className="text-outline italic text-label-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-base animate-pulse-soft">hourglass_empty</span>
+              Distilling the debate…
+            </div>
+          ) : (
+            <div className="font-body text-body-md text-on-surface leading-relaxed">{summary}</div>
+          )}
         </div>
-        <label style={{ display:"block", color:"#c9a84c", fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>What landed for you?</label>
-        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Write your reflection here…" rows={5}
-          style={{ width:"100%", background:"rgba(255,245,220,0.04)", border:"1px solid rgba(201,168,76,0.2)", borderRadius:10, padding:"10px 12px", fontSize:13, fontFamily:"Georgia,serif", color:"#e8d5a3", resize:"vertical", boxSizing:"border-box", outline:"none", lineHeight:1.7, marginBottom:16 }}/>
-        <div style={{ display:"flex", gap:8 }}>
-          <button onClick={onClose} style={{ flex:1, padding:"10px", borderRadius:10, border:"1px solid rgba(201,168,76,0.2)", background:"transparent", color:"#6a5420", fontSize:13, cursor:"pointer" }}>Skip</button>
-          <button onClick={() => onSave(note, summary)} style={{ flex:2, padding:"10px", borderRadius:10, border:"none", background:"linear-gradient(135deg,#5a3a08,#c9a84c,#8b6914)", color:"#1a1008", fontSize:13, fontWeight:700, cursor:"pointer" }}>Save to Library →</button>
+
+        <label className="block font-label text-label-sm text-primary uppercase tracking-wider mb-2">What landed for you?</label>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Write your reflection here…"
+          rows={5}
+          className="field-input w-full rounded-xl px-3 py-3 font-body text-body-md leading-relaxed resize-y mb-4"
+        />
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="ghost-btn flex-1 py-3 rounded-xl font-label text-label-sm">Skip</button>
+          <button onClick={() => onSave(note, summary)} className="primary-btn flex-[2] py-3 rounded-xl font-label text-label-md uppercase tracking-widest flex items-center justify-center gap-2">
+            Save to Library
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1195,6 +1398,7 @@ export default function App() {
   const [showJournal, setShowJournal] = useState(false);
   const [currentDebateId, setCurrentDebateId] = useState(null);
   const [highFidelity, setHighFidelity] = useState(false);
+  const [hoveredPh, setHoveredPh] = useState<string | null>(null);
   const gestureTimer = useRef(null);
   const speakRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -1219,9 +1423,11 @@ export default function App() {
   useEffect(() => {
     if (screen !== "debate" || turns.length === 0) return;
     clearInterval(gestureTimer.current); setGestureFrame(0);
-    gestureTimer.current = setInterval(() => setGestureFrame(p => p + 1), 600);
+    const currentTurn = turns[currentIdx];
+    const intervalMs = currentTurn && currentTurn.philosopher !== "user" && isProofStagePhilosopherKey(currentTurn.philosopher) ? 2600 : 1100;
+    gestureTimer.current = setInterval(() => setGestureFrame(p => p + 1), intervalMs);
     return () => clearInterval(gestureTimer.current);
-  }, [currentIdx, screen, turns.length]);
+  }, [currentIdx, screen, turns]);
 
   useEffect(() => {
     if (screen !== "debate" || !soundOn) return;
@@ -1287,6 +1493,8 @@ export default function App() {
       const hits = results[k] || [];
       blocks[k] = { retrieval: hits.map(h => ({ text: h.text, work: h.work })) };
     }
+    console.log("[RAG] retrieve results:", Object.fromEntries(selArr.map(k => [k, (results[k] || []).length + " hits"])));
+    console.log("[RAG] top hit per philosopher:", Object.fromEntries(selArr.map(k => [k, (results[k] || [])[0] ? `"${(results[k][0].text || "").slice(0,80)}…" (score=${results[k][0].score?.toFixed(3)})` : "no corpus"])));
     retrievalCacheRef.current = { key, blocks };
     return blocks;
   }
@@ -1371,6 +1579,10 @@ export default function App() {
   const isUser = cur && cur.philosopher === "user";
   const activePh = !isUser && cur ? ALL_PHILOSOPHERS[cur.philosopher] : null;
   const gesture = activePh ? activePh.gestures[gestureFrame % activePh.gestures.length] : "idle";
+  const proofStageState = PROOF_STAGE_STATE_CYCLE[gestureFrame % PROOF_STAGE_STATE_CYCLE.length];
+  const proofStageKey = !isUser && !!cur && isProofStagePhilosopherKey(cur.philosopher) ? cur.philosopher : null;
+  const proofStageManifest = proofStageKey ? proofStageRegistry[proofStageKey] : null;
+  const isProofStageTurn = !!proofStageManifest;
 
   const examples = [
     { text:"I feel trapped in a career I hate but I'm afraid to leave.", tone:"deep" },
@@ -1382,8 +1594,11 @@ export default function App() {
   ];
 
   if (screen === "loading") return (
-    <div style={{ minHeight:"100vh", background:"#0e0b08", display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <div style={{ color:"#6a5420", fontFamily:"Georgia,serif", fontSize:14, fontStyle:"italic" }}>Opening the library…</div>
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest">
+      <div className="text-outline italic font-body text-sm tracking-wide flex items-center gap-3">
+        <span className="material-symbols-outlined text-primary/60 animate-pulse-soft">account_balance</span>
+        Opening the library…
+      </div>
     </div>
   );
   if (screen === "profile") return <ProfileScreen profile={profile} onSave={saveProfile} />;
@@ -1396,228 +1611,663 @@ export default function App() {
   );
 
   // ── INTRO ──
-  if (screen === "intro") return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0e0b08 0%,#1a1208 50%,#120e06 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", fontFamily:"Georgia,serif", padding:"24px 20px", overflowY:"auto" }}>
-      <style>{`@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}textarea:focus{outline:none}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#3a2a10;border-radius:3px}`}</style>
-      <div style={{ position:"fixed", top:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)" }}/>
-      <div style={{ textAlign:"center", maxWidth:740, width:"100%" }}>
-        <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:16 }}>
-          {(profileAnswers as any) && (profileAnswers as any).name ? (
-            <div onClick={() => setScreen("profile")} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(201,168,76,0.08)", border:"1px solid rgba(201,168,76,0.2)", borderRadius:20, padding:"5px 12px", cursor:"pointer" }}>
-              <span style={{ color:"#c9a84c", fontSize:12 }}>👤 {(profileAnswers as any).name}</span>
-              <span style={{ color:"#4a3a18", fontSize:10 }}>· Edit</span>
+  if (screen === "intro") {
+    const visitorName = (profileAnswers as any)?.name;
+    const tone = problem.trim() ? classifyQuestion(problem) : null;
+    return (
+      <div className="min-h-screen flex flex-col bg-surface-container-lowest font-body marble-grain">
+        {/* Sticky Top App Bar — three columns: profile/library chips · brand · nav.
+            Greek temple façade: Doric pediment crown above the brand, laurel
+            sprigs flanking the icon, meander key band underneath. */}
+        <header className="sticky top-0 z-50 bg-surface-container-lowest/90 backdrop-blur-md border-b border-primary/20 shadow-sm">
+          {/* Grid: side columns shrink to fit their content, center gets all
+              remaining space so the headline + subtitle don't overflow at zoom. */}
+          <div className="grid grid-cols-[auto_1fr_auto] items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-max-width mx-auto gap-3 sm:gap-4">
+            <div className="flex items-center justify-start gap-2 min-w-0">
+              <div onClick={() => setScreen("profile")}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 hover:border-primary/60 transition-colors cursor-pointer bg-surface-container-lowest max-w-[42vw] sm:max-w-none">
+                <span className="material-symbols-outlined text-primary text-base shrink-0">{visitorName ? "account_circle" : "person_add"}</span>
+                <span className="font-label text-label-sm text-on-surface-variant truncate">
+                  {visitorName ? <>{visitorName} <span className="text-primary/50 mx-1">·</span> Edit</> : "Set up profile"}
+                </span>
+              </div>
             </div>
-          ) : (
-            <div onClick={() => setScreen("profile")} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(201,168,76,0.05)", border:"1px solid rgba(201,168,76,0.12)", borderRadius:20, padding:"5px 12px", cursor:"pointer" }}>
-              <span style={{ color:"#6a5420", fontSize:12 }}>📜 Set up profile →</span>
+            <div className="flex flex-col items-center justify-center text-center min-w-0 px-2">
+              {/* Doric pediment over the brand — hidden on narrow viewports to avoid cramping */}
+              <div className="hidden md:block mb-1 opacity-90">
+                <PedimentDoric width={300} />
+              </div>
+              {/* Brand row: laurel · icon · laurel — laurels hide on narrow viewports */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-1">
+                <div className="hidden sm:block"><LaurelSprig width={48} flip /></div>
+                <span className="material-symbols-outlined text-2xl sm:text-3xl text-primary shrink-0">account_balance</span>
+                <div className="hidden sm:block"><LaurelSprig width={48} /></div>
+              </div>
+              <h1 className="font-display text-xl sm:text-2xl md:text-headline-md text-primary tracking-tight leading-tight inscription whitespace-nowrap">
+                The Philosophical Council
+              </h1>
+              <p className="font-label text-[10px] sm:text-label-sm text-primary/70 tracking-[0.25em] sm:tracking-[0.3em] uppercase mt-1 inscription-sm whitespace-nowrap">
+                Assemble Your Council
+              </p>
             </div>
-          )}
-          <div onClick={() => setScreen("library")} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(201,168,76,0.05)", border:"1px solid rgba(201,168,76,0.12)", borderRadius:20, padding:"5px 12px", cursor:"pointer" }}>
-            <span style={{ color:"#6a5420", fontSize:12 }}>📚 Library</span>
+            <nav className="hidden md:flex items-center justify-end gap-6">
+              <a className="text-primary font-bold border-b-2 border-primary pb-1 cursor-default">Council</a>
+              <button onClick={() => setScreen("library")} className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300">Library</button>
+            </nav>
+            <div className="flex md:hidden items-center justify-end gap-2">
+              <button onClick={() => setScreen("library")} aria-label="Library" className="text-on-surface-variant hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">menu_book</span>
+              </button>
+            </div>
           </div>
-        </div>
-        <div style={{ fontSize:32, marginBottom:4 }}>🎭</div>
-        <h1 style={{ color:"#e8d5a3", fontSize:24, fontWeight:700, margin:"0 0 4px", textShadow:"0 2px 20px rgba(201,168,76,0.3)" }}>The Philosophical Council</h1>
-        <p style={{ color:"#6a5420", fontSize:11, textTransform:"uppercase", letterSpacing:3, marginBottom:20 }}>Assemble Your Council</p>
-        <div style={{ marginBottom:20 }}>
-          <p style={{ color:"#8b7040", fontSize:13, marginBottom:10 }}>Choose your council <span style={{ color:"#4a3a18", fontSize:11 }}>(min 2)</span></p>
-          <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:9 }}>
-            {Object.entries(ALL_PHILOSOPHERS).map(([k, ph], idx) => {
-              const on = selected.has(k);
-              return (
-                <div key={k} onClick={() => togglePh(k)} style={{ cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3, padding:"9px 7px", borderRadius:12, border:"1.5px solid "+(on?ph.accent:"rgba(201,168,76,0.1)"), background:on?"rgba(30,20,8,0.9)":"rgba(10,8,4,0.5)", transition:"all 0.2s ease", boxShadow:on?"0 0 14px "+ph.accent+"33":"none", minWidth:68, position:"relative" }}>
-                  {on && <div style={{ position:"absolute", top:-6, right:-6, width:17, height:17, borderRadius:"50%", background:ph.accent, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, color:"#0e0b08", fontWeight:900 }}>✓</div>}
-                  <div style={{ width:56, height:84, animation:on?"floatUp 3s ease infinite":"none", animationDelay:(idx*0.25)+"s" }}>
-                    <ph.Body size={56} gesture="idle" />
+          {/* Original gold gradient strip running the full width under the header */}
+          <div
+            aria-hidden="true"
+            className="w-full h-1.5"
+            style={{
+              background:
+                "linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)",
+            }}
+          />
+        </header>
+
+        {/* Main */}
+        <main className="flex-grow flex flex-col items-center px-margin-mobile md:px-margin-desktop py-12 max-w-max-width mx-auto w-full gap-12 md:gap-16 relative">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 ambient-glow -z-10" />
+
+          {/* Council selection */}
+          <section className="w-full flex flex-col items-center gap-6 z-10">
+            <p className="font-label text-label-md text-primary">
+              Choose your council <span className="text-primary/50">(min 2)</span>
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 max-w-5xl mx-auto">
+              {Object.entries(ALL_PHILOSOPHERS).map(([k, ph], idx) => {
+                const on = selected.has(k);
+                const lastName = ph.name.split(" ").slice(-1)[0];
+                return (
+                  <div
+                    key={k}
+                    onClick={() => togglePh(k)}
+                    className={`character-card glass-panel relative w-48 h-64 rounded-xl flex flex-col items-center pb-3 px-1 cursor-pointer overflow-hidden ${on ? "selected" : "unselected"}`}
+                    style={{
+                      // @ts-ignore — CSS custom property for staggered animation delay
+                      "--card-index": idx,
+                      borderColor: on ? `${ph.accent}99` : "rgba(212,175,55,0.15)",
+                      boxShadow: on ? `0 0 18px ${ph.accent}33, 0 20px 40px -10px rgba(0,0,0,0.6)` : undefined,
+                    }}
+                    onMouseEnter={() => setHoveredPh(k)}
+                    onMouseLeave={() => setHoveredPh(null)}>
+                    {on && (
+                      <div
+                        className="absolute top-2 right-2 rounded-full w-5 h-5 flex items-center justify-center z-10 shadow-sm"
+                        style={{ backgroundColor: ph.accent, color: "#0c0e0f" }}>
+                        <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+                      </div>
+                    )}
+                    {isProofStagePhilosopherKey(k) ? (
+                      <img
+                        src={proofStageRegistry[k].proofAssets.avatar.bustNeutral}
+                        alt={ph.name}
+                        className="flex-1 min-h-0 w-full object-contain object-bottom"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className="flex-1 min-h-0 flex items-end justify-center pt-2">
+                        <ph.Body size={128} gesture="idle" />
+                      </div>
+                    )}
+                    <p
+                      className="font-label uppercase tracking-wider text-[10px] mt-1.5 mb-0.5 text-center shrink-0"
+                      style={{ color: on ? ph.accent : "rgba(208,197,175,0.6)" }}>
+                      {lastName}
+                    </p>
+                    <p className="text-[9px] text-outline/60 text-center leading-tight shrink-0">{ph.era}</p>
                   </div>
-                  <span style={{ fontSize:9, color:on?ph.accent:"#4a3a18", fontWeight:700, textTransform:"uppercase", letterSpacing:0.5, textAlign:"center" }}>{ph.name.split(" ").slice(-1)[0]}</span>
-                  <span style={{ fontSize:7.5, color:on?"#8b7040":"#2a2010", textAlign:"center", maxWidth:65, lineHeight:1.2 }}>{ph.era}</span>
+                );
+              })}
+            </div>
+            <p className="font-label text-label-sm text-primary/70 mt-1">{selected.size} selected</p>
+          </section>
+
+          {/* Meander divider — separates the council from the desk */}
+          <div className="greek-meander-soft w-full max-w-3xl mx-auto" aria-hidden="true" />
+
+          {/* Input section (the desk) */}
+          <section className="w-full max-w-4xl mx-auto glass-panel rounded-xl p-6 md:p-8 flex flex-col gap-6 z-10 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
+
+            <div className="flex flex-col gap-3 text-center">
+              <label htmlFor="debate-input" className="font-headline text-headline-sm text-primary">
+                Ask anything — deep or delightfully trivial
+              </label>
+              <textarea
+                id="debate-input"
+                value={problem}
+                onChange={(e) => setProblem(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    startDebate();
+                  }
+                }}
+                placeholder="Should I eat the french fries? / Should I quit my job? / What is love?"
+                rows={3}
+                className="field-input w-full rounded-xl px-5 py-4 font-body text-body-lg text-center resize-none shadow-inner"
+              />
+              {tone && (
+                <div className="flex items-center justify-center gap-2 -mt-1">
+                  <span
+                    className="material-symbols-outlined text-base"
+                    style={{ color: tone === "light" ? "#f2ca50" : "#ffe088", fontVariationSettings: "'FILL' 1" }}>
+                    {tone === "light" ? "light_mode" : "nightlight"}
+                  </span>
+                  <span className="font-label text-label-sm" style={{ color: tone === "light" ? "#a89060" : "#b89858" }}>
+                    {tone === "light" ? "Light mode — they'll be playful" : "Deep mode — they'll go to the bone"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Example pill chips */}
+            <div className="flex flex-wrap justify-center gap-3">
+              {examples.map((ex, i) => (
+                <button
+                  key={i}
+                  onClick={() => setProblem(ex.text)}
+                  className="pill-chip flex items-center gap-2 px-4 py-2 rounded-full font-label text-label-sm text-on-surface-variant">
+                  <span
+                    className="material-symbols-outlined text-base"
+                    style={{ color: ex.tone === "light" ? "#f2ca50" : "#ffe088", fontVariationSettings: "'FILL' 1" }}>
+                    {ex.tone === "light" ? "light_mode" : "nightlight"}
+                  </span>
+                  <span className="truncate max-w-[200px]">{ex.text}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* HF-Mode toggle */}
+            <div className="flex items-center justify-center gap-4">
+              <label className="flex items-center gap-3 cursor-pointer group" onClick={() => setHighFidelity((p) => !p)}>
+                <div className={`relative flex items-center justify-center w-5 h-5 border rounded transition-colors bg-surface-container-lowest ${highFidelity ? "border-primary" : "border-primary/40 group-hover:border-primary"}`}>
+                  {highFidelity && <span className="material-symbols-outlined text-[16px] text-primary">check</span>}
+                </div>
+                <span className={`font-label text-label-md flex items-center gap-2 transition-colors ${highFidelity ? "text-primary" : "text-primary/70 group-hover:text-primary"}`}>
+                  <span className="material-symbols-outlined text-[18px]">psychiatry</span>
+                  High-Fidelity Mode
+                </span>
+              </label>
+              <span className="font-label text-label-sm text-primary/40 italic hidden sm:block border-l border-primary/20 pl-4">
+                {highFidelity ? "slower, sharper voice" : "faster, may sound generic"}
+              </span>
+            </div>
+
+            {debateError && (
+              <div className="rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-300 text-label-sm flex items-start gap-2">
+                <span className="material-symbols-outlined text-base mt-0.5">warning</span>
+                <span>{debateError}</span>
+              </div>
+            )}
+
+            <button
+              onClick={startDebate}
+              disabled={!problem.trim() || isLoading || selected.size < 2}
+              className="primary-btn w-full py-4 rounded-xl font-label text-label-md uppercase tracking-widest flex items-center justify-center gap-3">
+              {isLoading ? "Summoning the council…" : "Open the Debate"}
+              {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
+            </button>
+          </section>
+        </main>
+
+        {/* Philosopher hover preview — fixed right panel, desktop only */}
+        {hoveredPh && (() => {
+          const hph = ALL_PHILOSOPHERS[hoveredPh];
+          const bio = (PHILOSOPHER_BIOS as Record<string,string>)[hoveredPh] || "";
+          const isProof = isProofStagePhilosopherKey(hoveredPh);
+          return (
+            <div
+              className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex-col items-center gap-3 glass-panel rounded-2xl p-5 w-80 animate-slide-up"
+              style={{ borderColor: `${hph.accent}55`, boxShadow: `0 0 40px ${hph.accent}22, 0 24px 48px -12px rgba(0,0,0,0.7)` }}>
+              <div className="w-full rounded-xl overflow-hidden flex items-end justify-center" style={{ minHeight: 340 }}>
+                {isProof ? (
+                  <img
+                    src={proofStageRegistry[hoveredPh].proofAssets.avatar.bustActive}
+                    alt={hph.name}
+                    className="w-full object-contain object-bottom"
+                    style={{ maxHeight: 400 }}
+                    draggable={false}
+                  />
+                ) : (
+                  <hph.Body size={240} gesture="idle" />
+                )}
+              </div>
+              <div className="w-full text-center">
+                <div className="font-display text-xl leading-tight mb-0.5" style={{ color: hph.accent }}>{hph.name}</div>
+                <div className="font-label text-[10px] text-outline/70 uppercase tracking-[0.2em] mb-2">{hph.era}</div>
+                <div className="greek-meander-soft w-full opacity-50 mb-2" aria-hidden="true" />
+                <p className="font-body text-[11px] text-on-surface-variant leading-relaxed text-left">{bio.slice(0, 200)}{bio.length > 200 ? "…" : ""}</p>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Footer meander */}
+        <div className="greek-meander w-full mt-8 opacity-80" aria-hidden="true" />
+
+        {/* Footer */}
+        <footer className="bg-surface-container-lowest text-on-surface-variant border-t border-primary/10 mt-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-gutter max-w-max-width mx-auto gap-4">
+            <div className="font-label text-label-md font-bold text-primary flex-1 flex justify-start">The Philosophical Council</div>
+            <div className="font-body text-label-sm text-center flex-1">© 2026 The Philosophical Council. Scriptorium Digital.</div>
+            <nav className="flex items-center justify-center md:justify-end gap-6 font-body text-label-sm flex-1">
+              <button onClick={() => setScreen("library")} className="text-on-surface-variant hover:text-primary transition-colors">Archive</button>
+            </nav>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ── DEBATE ──
+  const accentColor = activePh ? activePh.accent : "#d4af37";
+  const speakerColor = isUser ? "#7ec8a0" : accentColor;
+  return (
+    <div className={`min-h-screen flex flex-col font-body overflow-hidden marble-grain ${isProofStageTurn ? "bg-[#090807]" : "bg-surface-container-lowest"}`}>
+      {/* Compact top bar — brand, question summary, sound toggle */}
+      <header className="z-20 bg-surface-container-lowest/90 backdrop-blur-md border-b border-primary/20">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center w-full px-margin-mobile py-3 max-w-max-width mx-auto gap-3 sm:gap-4">
+          <button onClick={() => setScreen("intro")} className="ghost-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0" title="Back to council">
+            <span className="material-symbols-outlined text-base">arrow_back</span>
+          </button>
+          <div className="flex flex-col items-center justify-center text-center min-w-0 px-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-primary/80 min-w-0">
+              <div className="hidden sm:block shrink-0"><LaurelSprig width={24} flip /></div>
+              <span className="material-symbols-outlined text-base shrink-0">account_balance</span>
+              <span className="font-label text-[10px] sm:text-label-sm uppercase tracking-[0.2em] sm:tracking-[0.3em] inscription-sm whitespace-nowrap truncate">The Philosophical Council</span>
+              <div className="hidden sm:block shrink-0"><LaurelSprig width={24} /></div>
+            </div>
+            <div className="font-headline italic text-primary/50 text-label-sm sm:text-label-md truncate w-full mt-0.5">
+              &ldquo;{submitted}&rdquo;
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (soundOn && ambienceRef.current) {
+                ambienceRef.current.fadeOut(0.5);
+                setTimeout(() => {
+                  try { ambienceRef.current && ambienceRef.current.stop(); } catch {}
+                  ambienceRef.current = null;
+                }, 600);
+              }
+              setSoundOn((p) => !p);
+            }}
+            className={`ghost-btn flex items-center gap-1.5 px-3 py-1 rounded-full font-label text-label-sm ${soundOn ? "" : "opacity-50"}`}
+            title={soundOn ? "Mute ambient sound" : "Unmute ambient sound"}>
+            <span className="material-symbols-outlined text-base">{soundOn ? "volume_up" : "volume_off"}</span>
+          </button>
+        </div>
+        <div className="greek-meander-soft w-full opacity-70" aria-hidden="true" />
+      </header>
+
+      {/* Turn timeline */}
+      <div className="flex justify-center items-center gap-1.5 py-2 z-10">
+        {turns.map((t, i) => {
+          const tCol = t && t.philosopher === "user" ? "#7ec8a0" : (ALL_PHILOSOPHERS[t && t.philosopher] || {}).accent || "#d4af37";
+          return (
+            <div
+              key={i}
+              onClick={() => setCurrentIdx(i)}
+              className="rounded-full cursor-pointer transition-all duration-300"
+              style={{
+                width: i === currentIdx ? 22 : 7,
+                height: 7,
+                background: i === currentIdx ? tCol : "rgba(212,175,55,0.18)",
+              }}
+            />
+          );
+        })}
+        {isLoading && <div className="w-2 h-2 rounded-full bg-primary/30 animate-pulse-soft" />}
+      </div>
+
+      {/* Theatre stage — centered active speaker over a stage strip with side lighting.
+          Greek-temple framing: two Doric columns flank the stage at far edges, a
+          meander key runs along the cornice atop the stage floor strip. */}
+      {isProofStageTurn && proofStageManifest ? (
+        <PhilosopherProofStage
+          manifest={proofStageManifest}
+          currentState={proofStageState}
+          selectedCount={selArr.length}
+          FallbackBody={(activePh && activePh.Body) || CamusBody}
+        />
+      ) : (
+        <div className="flex-1 flex items-end justify-center px-margin-mobile relative min-h-0">
+          {/* Doric columns flanking the stage — hidden on small viewports
+              since they'd cramp the speaker. They sit at the outer edges of
+              the stage strip and rise toward the top of the visible area. */}
+          <div
+            className="hidden md:block absolute bottom-14 z-0 opacity-70 pointer-events-none"
+            style={{ left: "max(20px, 4%)" }}
+            aria-hidden="true">
+            <DoricColumn height={320} />
+          </div>
+          <div
+            className="hidden md:block absolute bottom-14 z-0 opacity-70 pointer-events-none"
+            style={{ right: "max(20px, 4%)" }}
+            aria-hidden="true">
+            <DoricColumn height={320} />
+          </div>
+
+          {/* Stage floor strip with cornice meander */}
+          <div className="absolute bottom-0 left-margin-mobile right-margin-mobile h-14 bg-gradient-to-b from-surface-container-low to-surface-container-lowest border-t border-primary/20" />
+          {/* Greek meander running along the top edge of the stage floor — like
+              a temple cornice. */}
+          <div
+            className="absolute left-margin-mobile right-margin-mobile bg-no-repeat opacity-55 z-[1] pointer-events-none greek-meander-soft"
+            style={{ bottom: "calc(3.5rem - 6px)" }}
+            aria-hidden="true"
+          />
+          {/* Subtle vertical floorboards */}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div
+              key={i}
+              className="absolute bottom-0 w-px h-14 bg-primary/[0.03]"
+              style={{ left: `calc(${parseInt("20")}px + ${i * 12.5}%)` }}
+            />
+          ))}
+          {/* Per-philosopher accent glow behind the active speaker */}
+          {activePh && (
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-60 h-80 pointer-events-none transition-all duration-500 animate-flicker"
+              style={{ background: `radial-gradient(ellipse at 50% 100%, ${activePh.accent}22 0%, transparent 70%)` }}
+            />
+          )}
+          {isUser && (
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-52 h-72 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse at 50% 100%, #7ec8a022 0%, transparent 70%)" }}
+            />
+          )}
+
+          {/* Background-row of council members (faded) */}
+          <div className="absolute bottom-14 left-margin-mobile right-margin-mobile flex justify-around items-end z-[1]">
+            {selArr.map((k) => {
+              const ph = ALL_PHILOSOPHERS[k];
+              const ia = cur && cur.philosopher === k;
+              return (
+                <div
+                  key={k}
+                  className="transition-all duration-500"
+                  style={{ opacity: ia ? 0 : 0.12, transform: "scale(0.8)", filter: "sepia(40%) grayscale(40%)" }}>
+                  <ph.Body size={76} gesture="idle" />
                 </div>
               );
             })}
           </div>
-          <p style={{ color:"#4a3820", fontSize:11, marginTop:8 }}>{selected.size} selected</p>
-        </div>
-        <div style={{ background:"rgba(20,14,6,0.85)", border:"1px solid rgba(201,168,76,0.2)", borderRadius:16, padding:20, boxShadow:"0 8px 32px rgba(0,0,0,0.5)" }}>
-          <label style={{ display:"block", color:"#c9a84c", fontSize:13, marginBottom:7, textAlign:"left" }}>Ask anything — deep or delightfully trivial</label>
-          <textarea value={problem} onChange={e => setProblem(e.target.value)}
-            onKeyDown={e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); startDebate(); } }}
-            placeholder="Should I eat the french fries? / Should I quit my job? / What is love?" rows={3}
-            style={{ width:"100%", background:"rgba(255,245,220,0.04)", border:"1px solid rgba(201,168,76,0.15)", borderRadius:10, padding:"10px 12px", fontSize:14, fontFamily:"Georgia,serif", color:"#e8d5a3", resize:"none", boxSizing:"border-box", outline:"none" }} />
-          {problem.trim() && (
-            <div style={{ display:"flex", alignItems:"center", gap:6, margin:"5px 0 3px" }}>
-              <div style={{ width:6, height:6, borderRadius:"50%", background:classifyQuestion(problem)==="light"?"#7ec8a0":"#9b59b6" }}/>
-              <span style={{ fontSize:11, color:classifyQuestion(problem)==="light"?"#5a9870":"#7a4a9a" }}>
-                {classifyQuestion(problem)==="light" ? "Light mode — they'll be playful" : "Deep mode — they'll go to the bone"}
-              </span>
+
+          {/* Active speaker (philosopher OR user) */}
+          {cur && !isUser && activePh && (
+            <div key={currentIdx + "-" + cur.philosopher} className="relative z-[3] flex flex-col items-center animate-bob">
+              <activePh.Body size={150} gesture={gesture} />
             </div>
           )}
-          <div onClick={() => setHighFidelity(p => !p)}
-            style={{ display:"flex", alignItems:"center", gap:8, margin:"7px 0 0", padding:"7px 10px", borderRadius:10, border:"1px solid "+(highFidelity?"rgba(201,168,76,0.35)":"rgba(201,168,76,0.1)"), background:highFidelity?"rgba(201,168,76,0.08)":"rgba(201,168,76,0.02)", cursor:"pointer", userSelect:"none" }}>
-            <div style={{ width:14, height:14, borderRadius:4, border:"1.5px solid "+(highFidelity?"#c9a84c":"#4a3a18"), background:highFidelity?"#c9a84c":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
-              {highFidelity && <span style={{ fontSize:9, color:"#1a1008", fontWeight:900 }}>✓</span>}
-            </div>
-            <span style={{ fontSize:12, color:highFidelity?"#c9a84c":"#6a5420", fontWeight:600 }}>🔬 High-Fidelity Mode</span>
-            <span style={{ fontSize:10, color:highFidelity?"#8b7040":"#3a2a10", marginLeft:"auto", fontStyle:"italic" }}>{highFidelity ? "slower, sharper voice" : "faster, may sound generic"}</span>
-          </div>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:5, margin:"7px 0 10px" }}>
-            {examples.map((ex, i) => (
-              <button key={i} onClick={() => setProblem(ex.text)} style={{ fontSize:11, padding:"3px 8px", borderRadius:20, border:"1px solid "+(ex.tone==="light"?"rgba(126,200,160,0.2)":"rgba(201,168,76,0.15)"), background:ex.tone==="light"?"rgba(126,200,160,0.06)":"rgba(201,168,76,0.04)", cursor:"pointer", color:ex.tone==="light"?"#5a9870":"#7a6030" }}>
-                {ex.tone==="light"?"☀️ ":"🌙 "}{ex.text.slice(0,30)}…
-              </button>
-            ))}
-          </div>
-          {debateError && (
-            <div style={{ margin:"8px 0 4px", padding:"10px 14px", borderRadius:10, background:"rgba(180,60,40,0.12)", border:"1px solid rgba(180,60,40,0.3)", color:"#e08070", fontSize:12, lineHeight:1.6 }}>
-              ⚠️ {debateError}
+          {cur && isUser && (
+            <div key={"user-" + currentIdx} className="relative z-[3] flex flex-col items-center animate-bob">
+              <svg width={150} height={225} viewBox="0 0 100 150" fill="none">
+                <rect x="39" y="117" width="10" height="29" rx="3" fill="#2a3828" />
+                <rect x="51" y="117" width="10" height="29" rx="3" fill="#2a3828" />
+                <path d="M30 80 Q31 75 50 73 Q69 75 70 80 L72 117 Q60 121 50 119 Q40 121 28 117Z" fill="#2a3828" />
+                <path d="M36 92 Q20 100 17 118" stroke="#2a3828" strokeWidth="9" strokeLinecap="round" fill="none" />
+                <path d="M64 92 Q80 100 83 118" stroke="#2a3828" strokeWidth="9" strokeLinecap="round" fill="none" />
+                <rect x="44" y="65" width="12" height="13" rx="5" fill="#c8a870" />
+                <ellipse cx="50" cy="50" rx="22" ry="24" fill="#c8a870" />
+                <path d="M28 46 Q30 24 50 22 Q70 24 72 46 Q65 30 50 31 Q35 30 28 46Z" fill="#3a2a18" />
+                <path d="M44 65 Q50 69 56 65" stroke="#7ec8a0" strokeWidth="1.5" fill="none" />
+                <text x="50" y="138" textAnchor="middle" fill="#7ec8a0" fontSize="7" fontFamily="Inter" fontWeight="bold">
+                  {/* @ts-ignore */}
+                  {profileAnswers && profileAnswers.name ? profileAnswers.name.split(" ")[0].toUpperCase() : "YOU"}
+                </text>
+              </svg>
             </div>
           )}
-          <button onClick={startDebate} disabled={!problem.trim()||isLoading||selected.size<2}
-            style={{ width:"100%", padding:"11px", borderRadius:10, border:"none", background:(!problem.trim()||isLoading||selected.size<2)?"#1e1408":"linear-gradient(135deg,#5a3a08,#c9a84c,#8b6914)", color:(!problem.trim()||isLoading||selected.size<2)?"#3a2a10":"#1a1008", fontSize:14, fontWeight:700, cursor:(!problem.trim()||isLoading||selected.size<2)?"not-allowed":"pointer" }}>
-            {isLoading ? "Summoning the council…" : "Open the Debate →"}
-          </button>
         </div>
-      </div>
-      <div style={{ position:"fixed", bottom:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)" }}/>
-    </div>
-  );
+      )}
 
-  // ── DEBATE ──
-  return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0e0b08 0%,#1a1208 60%,#120e06 100%)", fontFamily:"Georgia,serif", display:"flex", flexDirection:"column", overflow:"hidden" }}>
-      <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes bobAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes pulseAnim{0%,100%{opacity:1}50%{opacity:0.6}}@keyframes flickerAnim{0%,100%{opacity:1}93%{opacity:0.7}94%{opacity:1}97%{opacity:0.85}98%{opacity:1}}textarea:focus{outline:none}`}</style>
-      <div style={{ position:"fixed", top:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)", zIndex:10 }}/>
-      <div style={{ position:"fixed", top:6, left:0, width:32, bottom:6, background:"linear-gradient(180deg,#1e1206,#0e0804)", borderRight:"1px solid rgba(201,168,76,0.12)", zIndex:10 }}/>
-      <div style={{ position:"fixed", top:6, right:0, width:32, bottom:6, background:"linear-gradient(180deg,#1e1206,#0e0804)", borderLeft:"1px solid rgba(201,168,76,0.12)", zIndex:10 }}/>
-
-      <div style={{ textAlign:"center", padding:"10px 48px 4px", zIndex:5, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div style={{ width:60 }} />
-        <div style={{ flex:1, textAlign:"center" }}>
-          <div style={{ color:"#6a5420", fontSize:10, textTransform:"uppercase", letterSpacing:3 }}>The Philosophical Council</div>
-          <div style={{ color:"rgba(201,168,76,0.35)", fontSize:11, marginTop:2, fontStyle:"italic", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:400, margin:"2px auto 0" }}>"{submitted}"</div>
-        </div>
-        <button onClick={() => {
-          if (soundOn && ambienceRef.current) { ambienceRef.current.fadeOut(0.5); setTimeout(() => { try { ambienceRef.current && ambienceRef.current.stop(); } catch {} ambienceRef.current = null; }, 600); }
-          setSoundOn(p => !p);
-        }} style={{ width:60, background:"transparent", border:"1px solid "+(soundOn?"rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)"), borderRadius:20, padding:"4px 10px", color:soundOn?"#c9a84c":"#3a2a10", fontSize:11, cursor:"pointer" }}>
-          {soundOn ? "🔊 On" : "🔇 Off"}
-        </button>
-      </div>
-
-      <div style={{ display:"flex", justifyContent:"center", gap:5, padding:"5px 0", zIndex:5 }}>
-        {turns.map((t, i) => (
-          <div key={i} onClick={() => setCurrentIdx(i)} style={{ width:i===currentIdx?18:7, height:7, borderRadius:4, background:i===currentIdx?(turns[i]&&turns[i].philosopher==="user"?"#7ec8a0":(ALL_PHILOSOPHERS[turns[i]&&turns[i].philosopher]||{}).accent||"#c9a84c"):"rgba(201,168,76,0.12)", cursor:"pointer", transition:"all 0.3s ease" }} />
-        ))}
-        {isLoading && <div style={{ width:7, height:7, borderRadius:4, background:"rgba(201,168,76,0.25)", animation:"pulseAnim 1s infinite" }} />}
-      </div>
-
-      <div style={{ flex:1, display:"flex", alignItems:"flex-end", justifyContent:"center", padding:"0 48px 0", position:"relative", minHeight:0 }}>
-        <div style={{ position:"absolute", bottom:0, left:32, right:32, height:56, background:"linear-gradient(180deg,#1e1408,#0e0a04)", borderTop:"1px solid rgba(201,168,76,0.18)" }}/>
-        {[0,1,2,3,4,5,6,7].map(i => (
-          <div key={i} style={{ position:"absolute", bottom:0, left:"calc(32px + "+i*12.5+"%)", width:1, height:56, background:"rgba(201,168,76,0.03)" }} />
-        ))}
-        {activePh && <div style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:240, height:340, background:"radial-gradient(ellipse at 50% 100%, "+activePh.accent+"18 0%, transparent 70%)", pointerEvents:"none", transition:"background 0.5s ease", animation:"flickerAnim 8s infinite" }}/>}
-        {isUser && <div style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:200, height:300, background:"radial-gradient(ellipse at 50% 100%, #7ec8a018 0%, transparent 70%)", pointerEvents:"none" }}/>}
-
-        <div style={{ position:"absolute", bottom:56, left:32, right:32, display:"flex", justifyContent:"space-around", alignItems:"flex-end", zIndex:1 }}>
-          {selArr.map(k => {
-            const ph = ALL_PHILOSOPHERS[k];
-            const ia = cur && cur.philosopher === k;
-            return (
-              <div key={k} style={{ opacity:ia?0:0.1, transform:"scale(0.8)", transition:"all 0.5s ease", filter:"sepia(50%) grayscale(50%)" }}>
-                <ph.Body size={76} gesture="idle" />
-              </div>
-            );
-          })}
-        </div>
-
-        {cur && !isUser && activePh && (
-          <div key={currentIdx+"-"+cur.philosopher} style={{ position:"relative", zIndex:3, display:"flex", flexDirection:"column", alignItems:"center", animation:"bobAnim 2s ease infinite" }}>
-            <activePh.Body size={150} gesture={gesture} />
-          </div>
-        )}
-        {cur && isUser && (
-          <div key={"user-"+currentIdx} style={{ position:"relative", zIndex:3, display:"flex", flexDirection:"column", alignItems:"center", animation:"bobAnim 2s ease infinite" }}>
-            <svg width={150} height={225} viewBox="0 0 100 150" fill="none">
-              <rect x="39" y="117" width="10" height="29" rx="3" fill="#2a3828"/>
-              <rect x="51" y="117" width="10" height="29" rx="3" fill="#2a3828"/>
-              <path d="M30 80 Q31 75 50 73 Q69 75 70 80 L72 117 Q60 121 50 119 Q40 121 28 117Z" fill="#2a3828"/>
-              <path d="M36 92 Q20 100 17 118" stroke="#2a3828" strokeWidth="9" strokeLinecap="round" fill="none"/>
-              <path d="M64 92 Q80 100 83 118" stroke="#2a3828" strokeWidth="9" strokeLinecap="round" fill="none"/>
-              <rect x="44" y="65" width="12" height="13" rx="5" fill="#c8a870"/>
-              <ellipse cx="50" cy="50" rx="22" ry="24" fill="#c8a870"/>
-              <path d="M28 46 Q30 24 50 22 Q70 24 72 46 Q65 30 50 31 Q35 30 28 46Z" fill="#3a2a18"/>
-              <path d="M44 65 Q50 69 56 65" stroke="#7ec8a0" strokeWidth="1.5" fill="none"/>
-              <text x="50" y="138" textAnchor="middle" fill="#7ec8a0" fontSize="7" fontFamily="Georgia" fontWeight="bold">
-              {/* @ts-ignore */}
-                {profileAnswers && profileAnswers.name ? profileAnswers.name.split(" ")[0].toUpperCase() : "YOU"}
-              </text>
-            </svg>
-          </div>
-        )}
-      </div>
-
-      <div style={{ zIndex:5, padding:"0 48px 12px" }}>
+      {/* Dialogue + controls */}
+      <div className={`z-10 px-margin-mobile pb-5 ${isProofStageTurn ? "relative -mt-16 pt-0 md:-mt-24" : "pt-2"}`}>
         {cur && (
-          <div key={"bubble-"+currentIdx} style={{ background:isUser?"linear-gradient(160deg,#1a2a1a,#121e12)":"linear-gradient(160deg,#1e1a0e,#16120a)", border:"1px solid "+(isUser?"#7ec8a044":(activePh?activePh.accent:"#c9a84c")+"44"), borderRadius:18, padding:"14px 18px", maxWidth:560, margin:"0 auto 10px", position:"relative", boxShadow:"0 4px 32px rgba(0,0,0,0.6)", animation:"slideUp 0.4s ease" }}>
-            <div style={{ position:"absolute", bottom:-13, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"13px solid transparent", borderRight:"13px solid transparent", borderTop:"13px solid "+(isUser?"#1a2a1a":"#1e1a0e") }}/>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7 }}>
-              <div style={{ width:7, height:7, borderRadius:"50%", background:isUser?"#7ec8a0":(activePh?activePh.accent:"#c9a84c"), boxShadow:"0 0 6px "+(isUser?"#7ec8a0":(activePh?activePh.accent:"#c9a84c")) }}/>
-              <span style={{ fontWeight:700, color:isUser?"#7ec8a0":(activePh?activePh.accent:"#c9a84c"), fontSize:12, textTransform:"uppercase", letterSpacing:1 }}>
-              {/* @ts-ignore */}
+          <div
+            key={"bubble-" + currentIdx}
+            className={`glass-panel relative mx-auto mb-4 animate-slide-up shadow-[0_24px_60px_rgba(0,0,0,0.34)] ${
+              isProofStageTurn
+                ? "max-w-[980px] rounded-[28px] px-6 py-5 md:px-8 md:py-7"
+                : "max-w-3xl rounded-[22px] px-5 py-4 md:px-6 md:py-5"
+            }`}
+            style={{
+              borderColor: `${speakerColor}66`,
+              background: "linear-gradient(180deg, rgba(15,11,9,0.96), rgba(11,9,8,0.94))",
+            }}>
+            {/* Tail pointer */}
+            {!isProofStageTurn && (
+              <div
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0"
+                style={{
+                  borderLeft: "12px solid transparent",
+                  borderRight: "12px solid transparent",
+                  borderTop: `12px solid rgba(12,14,15,0.8)`,
+                }}
+              />
+            )}
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: speakerColor, boxShadow: `0 0 6px ${speakerColor}` }}
+              />
+              <span className="font-label text-label-sm uppercase tracking-[0.2em] inscription-sm" style={{ color: speakerColor }}>
+                {/* @ts-ignore */}
                 {isUser ? (profileAnswers && profileAnswers.name ? profileAnswers.name : "You") : (activePh ? activePh.name : "")}
               </span>
-              {!isUser && activePh && <span style={{ color:"#4a3a18", fontSize:10 }}>· {activePh.era}</span>}
+              {!isUser && activePh && <span className="text-outline/60 text-label-sm">· {activePh.era}</span>}
               {!isUser && cur && cur.anachronismFlag && (
-                <span title="Flagged for an anachronism that couldn't be cleaned in one retry." style={{ color:"#e0a070", fontSize:11, cursor:"help" }}>⚠️</span>
+                <span title="Flagged for an anachronism that couldn't be cleaned in one retry." className="material-symbols-outlined text-base text-amber-400 cursor-help">warning</span>
               )}
-              <span style={{ marginLeft:"auto", color:"#3a2a10", fontSize:10 }}>{currentIdx+1}/{turns.length}</span>
+              <span className="ml-auto text-outline/50 font-label text-label-sm tabular-nums">
+                {currentIdx + 1}/{turns.length}
+              </span>
             </div>
-            <p style={{ margin:0, lineHeight:1.85, color:isUser?"#a8d8a8":"#e8d5a3", fontSize:14, fontStyle:"italic" }}>{cur.text}</p>
+            <p
+              className={`font-body tracking-[0.01em] ${
+                isProofStageTurn
+                  ? "max-w-[72ch] text-[1.08rem] leading-9 md:text-[1.24rem] md:leading-10"
+                  : "text-[1.06rem] leading-8 md:text-[1.18rem] md:leading-9"
+              }`}
+              style={{ color: isUser ? "#cde9cd" : "#f3e7cf" }}>
+              {cur.text}
+            </p>
           </div>
         )}
 
         {inputOpen && (
-          <div style={{ maxWidth:560, margin:"0 auto 10px", background:"linear-gradient(160deg,#1a2a1a,#121e12)", border:"1px solid #7ec8a033", borderRadius:14, padding:"12px 14px", animation:"slideUp 0.3s ease" }}>
-            <div style={{ fontSize:10, color:"#7ec8a0", textTransform:"uppercase", letterSpacing:1, marginBottom:7, fontWeight:700 }}>
+          <div
+            className={`glass-panel mx-auto mb-3 animate-slide-up ${
+              isProofStageTurn ? "max-w-[980px] rounded-[24px] px-5 py-4" : "max-w-2xl rounded-xl px-4 py-3"
+            }`}
+            style={{ borderColor: "#7ec8a044" }}>
+            <div className="font-label text-label-sm uppercase tracking-wider text-[#7ec8a0] mb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">mic_external_on</span>
               {/* @ts-ignore */}
-              {profileAnswers && profileAnswers.name ? "Speak, "+profileAnswers.name.split(" ")[0] : "Speak to the Council"}
+              {profileAnswers && profileAnswers.name ? `Speak, ${profileAnswers.name.split(" ")[0]}` : "Speak to the Council"}
             </div>
-            <textarea ref={speakRef} value={userInput} onChange={e => setUserInput(e.target.value)}
-              onKeyDown={e => { if (e.key==="Enter"&&!e.shiftKey){e.preventDefault();handleUserSpeak();} if(e.key==="Escape"){setInputOpen(false);setUserInput("");} }}
-              placeholder="Challenge them, ask a question, push back…" rows={2}
-              style={{ width:"100%", background:"rgba(120,200,120,0.04)", border:"1px solid rgba(126,200,160,0.2)", borderRadius:8, padding:"9px 12px", fontSize:13, fontFamily:"Georgia,serif", color:"#b8d8b8", resize:"none", boxSizing:"border-box", outline:"none" }} />
-            <div style={{ display:"flex", gap:6, marginTop:8, justifyContent:"flex-end" }}>
-              <button onClick={() => { setInputOpen(false); setUserInput(""); }} style={{ padding:"6px 14px", borderRadius:8, border:"1px solid rgba(201,168,76,0.15)", background:"transparent", color:"#5a4420", fontSize:11, cursor:"pointer" }}>Cancel</button>
-              <button onClick={handleUserSpeak} disabled={!userInput.trim()||isLoading} style={{ padding:"6px 18px", borderRadius:8, border:"none", background:(!userInput.trim()||isLoading)?"#1a2818":"linear-gradient(135deg,#1e4a28,#7ec8a0)", color:(!userInput.trim()||isLoading)?"#3a4a38":"#0e1e12", fontSize:12, fontWeight:700, cursor:(!userInput.trim()||isLoading)?"not-allowed":"pointer" }}>Speak →</button>
+            <textarea
+              ref={speakRef}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleUserSpeak(); }
+                if (e.key === "Escape") { setInputOpen(false); setUserInput(""); }
+              }}
+              placeholder="Challenge them, ask a question, push back…"
+              rows={2}
+              className="w-full bg-[#1a2a1a]/40 border border-[#7ec8a033] rounded-xl px-3 py-2 font-body text-body-md text-[#b8d8b8] placeholder:text-[#5a8870] focus:outline-none focus:border-[#7ec8a066] resize-none"
+            />
+            <div className="flex gap-2 mt-2 justify-end">
+              <button onClick={() => { setInputOpen(false); setUserInput(""); }} className="ghost-btn px-3 py-1.5 rounded-lg font-label text-label-sm">Cancel</button>
+              <button
+                onClick={handleUserSpeak}
+                disabled={!userInput.trim() || isLoading}
+                className="px-4 py-1.5 rounded-lg font-label text-label-sm flex items-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg,#1e4a28,#7ec8a0)", color: "#0e1e12" }}>
+                Speak
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </button>
             </div>
           </div>
         )}
 
-        <div style={{ display:"flex", gap:6, justifyContent:"center", alignItems:"center", maxWidth:560, margin:"0 auto" }}>
-          <button onClick={goPrev} disabled={currentIdx===0} style={{ padding:"8px 11px", borderRadius:10, border:"1px solid rgba(201,168,76,0.12)", background:currentIdx===0?"transparent":"rgba(201,168,76,0.06)", color:currentIdx===0?"#2a1a08":"#c9a84c", fontSize:12, fontWeight:600, cursor:currentIdx===0?"not-allowed":"pointer" }}>←</button>
-          <button onClick={() => { setInputOpen(p => !p); setTimeout(() => speakRef.current && speakRef.current.focus(), 50); }} disabled={isLoading}
-            style={{ padding:"8px 12px", borderRadius:10, border:"1px solid "+(inputOpen?"#7ec8a066":"rgba(126,200,160,0.2)"), background:inputOpen?"rgba(126,200,160,0.12)":"rgba(126,200,160,0.05)", color:isLoading?"#3a4a38":"#7ec8a0", fontSize:12, fontWeight:700, cursor:isLoading?"not-allowed":"pointer" }}>
-            {inputOpen ? "✕" : "✦ Speak"}
-          </button>
-          <button onClick={goNext} disabled={isLoading} style={{ flex:1, maxWidth:140, padding:"10px 14px", borderRadius:10, border:"1px solid "+(activePh?activePh.accent:"#8b6914")+"33", background:isLoading?"#1a1208":"linear-gradient(135deg,#2c1e08,#8b6914)", color:isLoading?"#3a2a10":"#f0d878", fontSize:13, fontWeight:700, cursor:isLoading?"not-allowed":"pointer", boxShadow:activePh&&!isLoading?"0 4px 14px rgba(139,105,20,0.25)":"none", transition:"all 0.3s ease" }}>
-            {isLoading ? "…" : currentIdx < turns.length-1 ? "Skip →" : "More →"}
-          </button>
-          <button onClick={goNext} disabled={isLoading||currentIdx===turns.length-1} style={{ padding:"8px 11px", borderRadius:10, border:"1px solid rgba(201,168,76,0.12)", background:currentIdx===turns.length-1?"transparent":"rgba(201,168,76,0.06)", color:currentIdx===turns.length-1?"#2a1a08":"#c9a84c", fontSize:12, fontWeight:600, cursor:(isLoading||currentIdx===turns.length-1)?"not-allowed":"pointer" }}>→</button>
-          <button onClick={() => setShowJournal(true)} title="Save & reflect" style={{ padding:"8px 10px", borderRadius:10, border:"1px solid rgba(201,168,76,0.18)", background:"rgba(201,168,76,0.06)", color:"#c9a84c", fontSize:13, cursor:"pointer" }}>✍️</button>
-          <button onClick={() => generateDebatePDF(submitted, turns, selArr, profileAnswers, Date.now(), null, null)} title="Download as PDF" style={{ padding:"8px 10px", borderRadius:10, border:"1px solid rgba(201,168,76,0.18)", background:"rgba(201,168,76,0.06)", color:"#c9a84c", fontSize:13, cursor:"pointer" }}>📄</button>
-        </div>
+        {isProofStageTurn ? (
+          <div className="mx-auto flex max-w-[980px] flex-col gap-3">
+            <div
+              className="glass-panel rounded-[24px] border border-[#d79a54]/12 bg-[linear-gradient(180deg,rgba(14,11,9,0.96),rgba(11,9,8,0.93))] px-4 py-4 shadow-[0_20px_44px_rgba(0,0,0,0.26)]">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={goPrev}
+                    disabled={currentIdx === 0}
+                    className="ghost-btn flex items-center gap-1.5 rounded-xl px-3 py-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Previous turn">
+                    <span className="material-symbols-outlined text-base">arrow_back</span>
+                    <span className="font-label text-label-sm uppercase tracking-[0.16em]">Prev</span>
+                  </button>
+                  <div className="rounded-full border border-[#d79a54]/16 bg-[#0f0b09]/85 px-3 py-2 font-label text-[11px] uppercase tracking-[0.2em] text-[#9b7b54]">
+                    Turn {currentIdx + 1} / {turns.length}
+                  </div>
+                </div>
 
-        <div style={{ display:"flex", gap:6, justifyContent:"center", maxWidth:560, margin:"7px auto 0" }}>
-          <button onClick={() => setScreen("profile")} style={{ flex:1, padding:"7px", borderRadius:10, border:"1px solid rgba(201,168,76,0.12)", background:"rgba(201,168,76,0.03)", color:"#6a5420", fontSize:11, cursor:"pointer" }}>📜 Profile</button>
-          <button onClick={() => setScreen("library")} style={{ flex:1, padding:"7px", borderRadius:10, border:"1px solid rgba(201,168,76,0.12)", background:"rgba(201,168,76,0.03)", color:"#6a5420", fontSize:11, cursor:"pointer" }}>📚 Library</button>
-          <button onClick={() => setScreen("intro")} style={{ flex:1, padding:"7px", borderRadius:10, border:"1px solid rgba(201,168,76,0.12)", background:"rgba(201,168,76,0.03)", color:"#6a5420", fontSize:11, cursor:"pointer" }}>✦ Council</button>
-          <button onClick={() => { setSubmitted(""); setTurns([]); setCurrentIdx(0); setScreen("intro"); }} style={{ flex:1, padding:"7px", borderRadius:10, border:"1px solid rgba(201,168,76,0.12)", background:"rgba(201,168,76,0.03)", color:"#6a5420", fontSize:11, cursor:"pointer" }}>✦ New</button>
-        </div>
+                <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                  <button
+                    onClick={() => { setInputOpen((p) => !p); setTimeout(() => speakRef.current && speakRef.current.focus(), 50); }}
+                    disabled={isLoading}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 font-label text-label-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                      inputOpen
+                        ? "bg-[#7ec8a020] border border-[#7ec8a066] text-[#7ec8a0]"
+                        : "bg-[#7ec8a008] border border-[#7ec8a033] text-[#7ec8a0] hover:bg-[#7ec8a015]"
+                    }`}
+                    title={inputOpen ? "Close speak panel" : "Speak to the council"}>
+                    <span className="material-symbols-outlined text-base">{inputOpen ? "close" : "mic_external_on"}</span>
+                    <span>{inputOpen ? "Close Panel" : "Speak to Council"}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowJournal(true)}
+                    title="Save & reflect"
+                    className="ghost-btn flex items-center gap-1.5 rounded-xl px-3 py-2.5 font-label text-label-sm">
+                    <span className="material-symbols-outlined text-base">edit_note</span>
+                    <span>Save Note</span>
+                  </button>
+                  <button
+                    onClick={() => generateDebatePDF(submitted, turns, selArr, profileAnswers, Date.now(), null, null)}
+                    title="Download as PDF"
+                    className="ghost-btn flex items-center gap-1.5 rounded-xl px-3 py-2.5 font-label text-label-sm">
+                    <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+                    <span>Export PDF</span>
+                  </button>
+                  <button
+                    onClick={goNext}
+                    disabled={isLoading}
+                    className="primary-btn min-w-[172px] rounded-xl px-5 py-3 font-label text-label-md uppercase tracking-[0.18em] flex items-center justify-center gap-2 disabled:opacity-40">
+                    {isLoading ? "…" : currentIdx < turns.length - 1 ? "Next Turn" : "Continue"}
+                    {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 text-center">
+              <button onClick={() => setScreen("profile")} className="ghost-btn rounded-full px-3 py-2 font-label text-label-sm flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base">account_circle</span>
+                <span>Profile</span>
+              </button>
+              <button onClick={() => setScreen("library")} className="ghost-btn rounded-full px-3 py-2 font-label text-label-sm flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base">menu_book</span>
+                <span>Library</span>
+              </button>
+              <button onClick={() => setScreen("intro")} className="ghost-btn rounded-full px-3 py-2 font-label text-label-sm flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base">groups</span>
+                <span>Council</span>
+              </button>
+              <button onClick={() => { setSubmitted(""); setTurns([]); setCurrentIdx(0); setScreen("intro"); }} className="ghost-btn rounded-full px-3 py-2 font-label text-label-sm flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base">add</span>
+                <span>New Debate</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Primary nav row */}
+            <div className="flex gap-2 justify-center items-center max-w-2xl mx-auto">
+              <button
+                onClick={goPrev}
+                disabled={currentIdx === 0}
+                className="ghost-btn p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Previous turn">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </button>
+              <button
+                onClick={() => { setInputOpen((p) => !p); setTimeout(() => speakRef.current && speakRef.current.focus(), 50); }}
+                disabled={isLoading}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-label text-label-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed ${inputOpen ? "bg-[#7ec8a020] border border-[#7ec8a066] text-[#7ec8a0]" : "bg-[#7ec8a008] border border-[#7ec8a033] text-[#7ec8a0] hover:bg-[#7ec8a015]"}`}
+                title={inputOpen ? "Close speak panel" : "Speak to the council"}>
+                <span className="material-symbols-outlined text-base">{inputOpen ? "close" : "mic_external_on"}</span>
+                <span className="hidden sm:inline">{inputOpen ? "Close" : "Speak"}</span>
+              </button>
+              <button
+                onClick={goNext}
+                disabled={isLoading}
+                className="primary-btn flex-1 max-w-[180px] py-3 rounded-xl font-label text-label-md uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40">
+                {isLoading ? "…" : currentIdx < turns.length - 1 ? "Next" : "More"}
+                {!isLoading && <span className="material-symbols-outlined">arrow_forward</span>}
+              </button>
+              <button
+                onClick={goNext}
+                disabled={isLoading || currentIdx === turns.length - 1}
+                className="ghost-btn p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Next turn">
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                title="Save & reflect"
+                className="ghost-btn p-2.5 rounded-xl">
+                <span className="material-symbols-outlined">edit_note</span>
+              </button>
+              <button
+                onClick={() => generateDebatePDF(submitted, turns, selArr, profileAnswers, Date.now(), null, null)}
+                title="Download as PDF"
+                className="ghost-btn p-2.5 rounded-xl">
+                <span className="material-symbols-outlined">picture_as_pdf</span>
+              </button>
+            </div>
+
+            {/* Secondary nav row — quick links to other screens */}
+            <div className="flex gap-2 justify-center max-w-2xl mx-auto mt-2">
+              <button onClick={() => setScreen("profile")} className="ghost-btn flex-1 py-2 rounded-xl font-label text-label-sm flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-base">account_circle</span>
+                <span className="hidden sm:inline">Profile</span>
+              </button>
+              <button onClick={() => setScreen("library")} className="ghost-btn flex-1 py-2 rounded-xl font-label text-label-sm flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-base">menu_book</span>
+                <span className="hidden sm:inline">Library</span>
+              </button>
+              <button onClick={() => setScreen("intro")} className="ghost-btn flex-1 py-2 rounded-xl font-label text-label-sm flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-base">groups</span>
+                <span className="hidden sm:inline">Council</span>
+              </button>
+              <button onClick={() => { setSubmitted(""); setTurns([]); setCurrentIdx(0); setScreen("intro"); }} className="ghost-btn flex-1 py-2 rounded-xl font-label text-label-sm flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-base">add</span>
+                <span className="hidden sm:inline">New</span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {showJournal && <JournalModal debateProblem={submitted} debateTurns={turns} onClose={() => setShowJournal(false)} onSave={handleSaveDebate} />}
-      <div style={{ position:"fixed", bottom:0, left:0, right:0, height:6, background:"linear-gradient(90deg,#2c1e0f,#8b6914,#c9a84c,#8b6914,#2c1e0f)", zIndex:10 }}/>
     </div>
   );
 }
