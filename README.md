@@ -72,7 +72,7 @@ This is not a chatbot. It is a **stage**.
 
 <div align="center">
 
-<img src="docs/screenshots/updated_council_landing_page.png" alt="The full council — portrait artwork, five per row, hover preview" width="850" />
+<img src="docs/screenshots/kafka_hover.png" alt="The full council — portrait artwork, five per row, hover preview" width="850" />
 <br><sub><i>The full roster. Portrait artwork for all thirteen philosophers. Hover any card to preview their portrait enlarged. Pick any combination — solo, three-way, or all thirteen at once.</i></sub>
 
 </div>
@@ -152,7 +152,7 @@ The shots below are from unedited sessions. The council speaks from a cinematic 
 
 ## They argue with each other
 
-The council is not parallel monologues. Each member listens to what came before and responds *by name*. Watch Kafka pick up Hemingway's fish, then Dostoevsky pick up Kafka's judge.
+The council is not parallel monologues. Each member listens to what came before and responds *by name*. On the selection screen, hover any card to preview their portrait and biography before you commit.
 
 <br>
 
@@ -163,12 +163,6 @@ The council is not parallel monologues. Each member listens to what came before 
       <br>
       <sub><b>Dostoevsky, mid-debate</b><br>
       <i>"Camus speaks of sensory joy and defiant living as if the body's appetite for sunlight were sufficient answer to the soul's torment — but I have known men, brother Sid, brilliant men, educated men, men who had every comfort arranged around them like furniture in a very fine room, and they destroyed themselves precisely because comfort is not meaning…"</i></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="docs/screenshots/debate-kafka.png" alt="Kafka responding to Hemingway by name" width="420" />
-      <br>
-      <sub><b>Kafka → Hemingway</b><br>
-      <i>"What Hemingway says about the fisherman troubles me in a way I cannot immediately name — perhaps because Santiago's suffering produces a fish, even if the fish is taken from him…"</i></sub>
     </td>
   </tr>
 </table>
@@ -206,7 +200,7 @@ Before the council convenes, you answer five quiet questions. Your name, where y
 
 <div align="center">
 
-<img src="docs/screenshots/profile.png" alt="The visitor profile intake" width="700" />
+<img src="docs/screenshots/updated_your_profile.png" alt="The visitor profile intake" width="700" />
 <br><sub><i>Five quiet questions. The council reads this before they speak — and may, when it serves the answer, address you by name.</i></sub>
 
 </div>
