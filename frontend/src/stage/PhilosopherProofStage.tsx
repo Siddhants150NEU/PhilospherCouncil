@@ -25,9 +25,31 @@ interface PhilosopherProofStageProps {
 type StageMood = "ruin" | "hush";
 
 function stageGestureFor(state: ProofStageState): "idle" | "speak" | "point" {
-  if (state === "speaking") return "speak";
-  if (state === "reflecting") return "point";
+  if (state === "speaking" || state === "monologue") return "speak";
+  if (state === "challenging" || state === "reflecting" || state === "weighing") return "point";
   return "idle";
+}
+
+function stateIcon(state: ProofStageState): string {
+  switch (state) {
+    case "listening":
+      return "hearing";
+    case "weighing":
+      return "balance";
+    case "speaking":
+      return "campaign";
+    case "challenging":
+      return "flare";
+    case "monologue":
+      return "theater_comedy";
+    case "reflecting":
+      return "nights_stay";
+    case "settling":
+      return "air";
+    case "idle":
+    default:
+      return "wb_sunny";
+  }
 }
 
 export function PhilosopherMiniAvatar({
@@ -93,9 +115,9 @@ export function PhilosopherProofStage({
   const [stageMood, setStageMood] = useState<StageMood>("ruin");
   const actorSrc = proofAssets.actorMasters[currentState];
   const stateAnimationClass =
-    currentState === "speaking"
+    currentState === "speaking" || currentState === "challenging" || currentState === "monologue"
       ? "camus-fallback-speaking"
-      : currentState === "reflecting"
+      : currentState === "reflecting" || currentState === "weighing"
         ? "camus-fallback-reflecting"
         : "camus-fallback-idle";
   const actorSizingStyle = {
@@ -165,10 +187,8 @@ export function PhilosopherProofStage({
                 {manifest.displayName}
               </div>
               <div className="hidden h-4 w-px bg-[#d79a54]/20 md:block" />
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#d79a54]/26 bg-[#110d0a]/90 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-[#d79a54]">
-                <span className="material-symbols-outlined text-[13px]">
-                  {currentState === "speaking" ? "campaign" : currentState === "reflecting" ? "nights_stay" : "wb_sunny"}
-                </span>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#d79a54]/26 bg-[#110d0a]/90 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-[#d79a54]">
+                <span className="material-symbols-outlined text-[13px]">{stateIcon(currentState)}</span>
                 {stateSpec.title}
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[#c29658]/16 bg-[#0f0b09]/80 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#947550]">
@@ -178,7 +198,7 @@ export function PhilosopherProofStage({
           </div>
         </div>
 
-        {currentState === "speaking" && (
+        {(currentState === "speaking" || currentState === "challenging" || currentState === "monologue") && (
           <>
             <div className="camus-speaking-echo absolute bottom-[14%] left-1/2 z-[3] h-[320px] w-[180px] -translate-x-[18%] opacity-16" />
             <div className="camus-speaking-echo absolute bottom-[14%] left-1/2 z-[3] h-[340px] w-[190px] translate-x-[4%] opacity-10" />

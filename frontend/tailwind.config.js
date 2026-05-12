@@ -40,9 +40,8 @@ export default {
         DEFAULT: "0.125rem",
         lg: "0.25rem",
         xl: "0.5rem",
-        full: "0.75rem",
-        // Tailwind's 'full' would conflict; we use rounded-full for circles via util
-        circle: "9999px",
+        // Note: do NOT override 'full' here — Tailwind's built-in full=9999px
+        // must stay intact so rounded-full renders as pill/circle, not 12px cap.
       },
       spacing: {
         gutter: "24px",
@@ -79,10 +78,10 @@ export default {
       keyframes: {
         floatCard: {
           "0%, 100%": { transform: "translateY(0) scale(1)" },
-          "50%": { transform: "translateY(-10px) scale(1.03)" },
+          "50%": { transform: "translateY(-4px) scale(1.008)" },
         },
         slideUp: {
-          from: { opacity: "0", transform: "translateY(30px)" },
+          from: { opacity: "0", transform: "translateY(12px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         bobAnim: {

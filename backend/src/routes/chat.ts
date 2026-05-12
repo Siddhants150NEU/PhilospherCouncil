@@ -114,20 +114,15 @@ router.post("/", async (req: Request, res: Response) => {
  * ALL_PHILOSOPHERS prompts). The blocks are PREPENDED so the existing prompt
  * — including its trailing "Do NOT …" clauses — is preserved untouched.
  *
- * Token-budget mitigation for large councils:
- *   - council size ≥ 10: drop retrieval, keep only anchors per philosopher
- *   - council size ≥ 7:  drop retrieval, keep anchors + anti-patterns
- *   - otherwise:         keep all three layers
- *
- * The caps make the input prompt fit comfortably under Sonnet's input window
- * even when 13 philosophers are selected.
+ * All three layers (voice anchors, anti-patterns, retrieval chunks) are always
+ * included regardless of council size. Sonnet's 200k input window comfortably
+ * fits the full stack for the largest possible council (13 philosophers).
  */
 function assembleSystem(
   voiceBlocks: Record<string, VoiceBlock>,
   existingSystem: string
 ): string {
   const keys = Object.keys(voiceBlocks);
-  const tier = keys.length >= 10 ? "anchors-only" : keys.length >= 7 ? "no-retrieval" : "full";
 
   const sections: string[] = [];
   for (const k of keys) {
@@ -144,19 +139,13 @@ function assembleSystem(
       parts.push(anchors.map((a) => `- "${a}"`).join("\n"));
     }
 
-    if (tier !== "anchors-only") {
-      const antis = ANTI_PATTERNS[k];
-      if (antis && antis.length > 0) {
-        parts.push(`${KEY} — WOULD NEVER:`);
-        parts.push(antis.map((a) => `- ${a}`).join("\n"));
-      }
+    const antis = ANTI_PATTERNS[k];
+    if (antis && antis.length > 0) {
+      parts.push(`${KEY} — WOULD NEVER:`);
+      parts.push(antis.map((a) => `- ${a}`).join("\n"));
     }
 
-    if (
-      tier === "full" &&
-      block.retrieval &&
-      block.retrieval.length > 0
-    ) {
+    if (block.retrieval && block.retrieval.length > 0) {
       parts.push(
         `${KEY} — FROM YOUR PRIOR WRITING ON THIS QUESTION (use as voice texture; do not quote literally unless directly relevant):`
       );

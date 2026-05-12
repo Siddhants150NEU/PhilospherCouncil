@@ -1,4 +1,12 @@
-export type ProofStageState = "idle" | "speaking" | "reflecting";
+export type ProofStageState =
+  | "idle"
+  | "listening"
+  | "weighing"
+  | "speaking"
+  | "challenging"
+  | "monologue"
+  | "reflecting"
+  | "settling";
 
 export type ProofStagePhilosopherKey =
   | "camus"
@@ -32,6 +40,22 @@ export interface ProofStageStateSpec {
 interface ProofStagePresentationSpec {
   actorSizing: Record<ProofStageState, string>;
   actorPlacementClass: Record<ProofStageState, string>;
+  environmentObjectPosition: string;
+  titleColor: string;
+  fallbackSize?: number;
+}
+
+interface ProofStagePresentationConfig {
+  actorSizing: {
+    idle: string;
+    speaking: string;
+    reflecting: string;
+  };
+  actorPlacementClass: {
+    idle: string;
+    speaking: string;
+    reflecting: string;
+  };
   environmentObjectPosition: string;
   titleColor: string;
   fallbackSize?: number;
@@ -125,9 +149,44 @@ function buildManifest(config: {
   speakingCue: string;
   reflectingCue: string;
   exportRules: string[];
-  presentation: ProofStagePresentationSpec;
+  presentation: ProofStagePresentationConfig;
 }): ProofStageManifest {
   const { key, displayName, root } = config;
+  const actorMasters: Record<ProofStageState, string> = {
+    idle: `${root}/actor/idle/master-cutout.png`,
+    listening: `${root}/actor/listening/master-cutout.png`,
+    weighing: `${root}/actor/weighing/master-cutout.png`,
+    speaking: `${root}/actor/speaking/master-cutout.png`,
+    challenging: `${root}/actor/challenging/master-cutout.png`,
+    monologue: `${root}/actor/monologue/master-cutout.png`,
+    reflecting: `${root}/actor/reflecting/master-cutout.png`,
+    settling: `${root}/actor/settling/master-cutout.png`,
+  };
+  const presentation: ProofStagePresentationSpec = {
+    actorSizing: {
+      idle: config.presentation.actorSizing.idle,
+      listening: config.presentation.actorSizing.idle,
+      weighing: config.presentation.actorSizing.idle,
+      speaking: config.presentation.actorSizing.speaking,
+      challenging: config.presentation.actorSizing.speaking,
+      monologue: config.presentation.actorSizing.speaking,
+      reflecting: config.presentation.actorSizing.reflecting,
+      settling: config.presentation.actorSizing.idle,
+    },
+    actorPlacementClass: {
+      idle: config.presentation.actorPlacementClass.idle,
+      listening: config.presentation.actorPlacementClass.idle,
+      weighing: config.presentation.actorPlacementClass.idle,
+      speaking: config.presentation.actorPlacementClass.speaking,
+      challenging: config.presentation.actorPlacementClass.speaking,
+      monologue: config.presentation.actorPlacementClass.speaking,
+      reflecting: config.presentation.actorPlacementClass.reflecting,
+      settling: config.presentation.actorPlacementClass.idle,
+    },
+    environmentObjectPosition: config.presentation.environmentObjectPosition,
+    titleColor: config.presentation.titleColor,
+    fallbackSize: config.presentation.fallbackSize,
+  };
   return {
     key,
     displayName,
@@ -136,11 +195,7 @@ function buildManifest(config: {
     proofAssets: {
       ready: true,
       environmentMaster: `${root}/env/far-hall-master.png`,
-      actorMasters: {
-        idle: `${root}/actor/idle/master-cutout.png`,
-        speaking: `${root}/actor/speaking/master-cutout.png`,
-        reflecting: `${root}/actor/reflecting/master-cutout.png`,
-      },
+      actorMasters,
       avatar: {
         sheet: `${root}/avatar/sheet.png`,
         bustNeutral: `${root}/avatar/bust-neutral.png`,
@@ -165,17 +220,47 @@ function buildManifest(config: {
           animationNote: "Breath loop, garment settle, subtle light drift, restrained presence.",
           layers: layersFor(root, "idle"),
         },
+        listening: {
+          title: "Listening",
+          cue: "Attentive stillness, receiving the other voice without going passive.",
+          animationNote: "Held posture, light breath, minimal motion, focused presence.",
+          layers: layersFor(root, "listening"),
+        },
+        weighing: {
+          title: "Weighing",
+          cue: "Turning inward, testing the thought before speaking it back.",
+          animationNote: "Slight inward draw, measured pause, restrained tension in the frame.",
+          layers: layersFor(root, "weighing"),
+        },
         speaking: {
           title: "Speaking",
           cue: config.speakingCue,
           animationNote: "Gesture emphasis, slight lift, smoke smear, and restrained echo trail.",
           layers: layersFor(root, "speaking"),
         },
+        challenging: {
+          title: "Challenging",
+          cue: "Sharper rebuttal, corrective force, the argument narrowing to a point.",
+          animationNote: "Tighter gesture emphasis, firmer rebound, more corrective energy than speaking.",
+          layers: layersFor(root, "challenging"),
+        },
+        monologue: {
+          title: "Monologue",
+          cue: "The thought opens wide, emotional or rhetorical force breaking outward.",
+          animationNote: "Broader gesture, fuller lift, more smoke or cloth motion, still controlled.",
+          layers: layersFor(root, "monologue"),
+        },
         reflecting: {
           title: "Reflecting",
           cue: config.reflectingCue,
           animationNote: "Slower float, contemplative tilt, longer smoke ribbon, reduced intensity.",
           layers: layersFor(root, "reflecting"),
+        },
+        settling: {
+          title: "Settling",
+          cue: "After-speech composure, the body quiet again while the thought remains in the air.",
+          animationNote: "Motion falls back down, breath returns, gesture resolves into stillness.",
+          layers: layersFor(root, "settling"),
         },
       },
       exportRules: config.exportRules,
@@ -189,11 +274,20 @@ function buildManifest(config: {
         "Icons are simplified exports from the same render family.",
       ],
     },
-    presentation: config.presentation,
+    presentation,
   };
 }
 
-export const PROOF_STAGE_STATE_CYCLE: ProofStageState[] = ["idle", "speaking", "reflecting"];
+export const PROOF_STAGE_STATE_CYCLE: ProofStageState[] = [
+  "idle",
+  "listening",
+  "weighing",
+  "speaking",
+  "challenging",
+  "monologue",
+  "reflecting",
+  "settling",
+];
 
 export const proofStageRegistry: Record<ProofStagePhilosopherKey, ProofStageManifest> = {
   camus: buildManifest({

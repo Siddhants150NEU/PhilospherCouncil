@@ -1829,30 +1829,41 @@ export default function App() {
           const isProof = isProofStagePhilosopherKey(hoveredPh);
           return (
             <div
-              className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex-col items-center gap-3 glass-panel rounded-2xl p-5 w-80 animate-slide-up"
-              style={{ borderColor: `${hph.accent}55`, boxShadow: `0 0 40px ${hph.accent}22, 0 24px 48px -12px rgba(0,0,0,0.7)` }}>
-              <div className="w-full rounded-xl overflow-hidden flex items-end justify-center" style={{ minHeight: 340 }}>
+              className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex-col items-center gap-0 glass-panel rounded-2xl overflow-hidden w-80 animate-slide-up"
+              style={{ borderColor: `${hph.accent}55`, boxShadow: `0 0 60px ${hph.accent}1a, 0 0 1px ${hph.accent}33, 0 32px 64px -16px rgba(0,0,0,0.8)` }}>
+              {/* Portrait area — dark gradient ground so images feel rooted */}
+              <div
+                className="w-full flex items-end justify-center relative overflow-hidden"
+                style={{
+                  minHeight: 320,
+                  background: `radial-gradient(ellipse 80% 60% at 50% 100%, ${hph.accent}0f 0%, transparent 70%), linear-gradient(180deg, #0a0807 0%, #0d0b09 100%)`,
+                }}>
                 {isProof ? (
                   <img
                     src={proofStageRegistry[hoveredPh].proofAssets.avatar.bustActive}
                     alt={hph.name}
                     className="w-full object-contain object-bottom"
                     style={{
-                      maxHeight: 400,
-                      maskImage: "radial-gradient(ellipse 82% 88% at 50% 44%, black 48%, rgba(0,0,0,0.6) 64%, transparent 90%)",
-                      WebkitMaskImage: "radial-gradient(ellipse 82% 88% at 50% 44%, black 48%, rgba(0,0,0,0.6) 64%, transparent 90%)",
+                      maxHeight: 380,
+                      maskImage: "radial-gradient(ellipse 84% 90% at 50% 46%, black 50%, rgba(0,0,0,0.55) 66%, transparent 88%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 84% 90% at 50% 46%, black 50%, rgba(0,0,0,0.55) 66%, transparent 88%)",
                     }}
                     draggable={false}
                   />
                 ) : (
                   <hph.Body size={240} gesture="idle" />
                 )}
+                {/* Accent color bleed at bottom edge */}
+                <div className="absolute inset-x-0 bottom-0 h-8 pointer-events-none" style={{ background: `linear-gradient(to top, ${hph.accent}10, transparent)` }} />
               </div>
-              <div className="w-full text-center">
-                <div className="font-display text-xl leading-tight mb-0.5" style={{ color: hph.accent }}>{hph.name}</div>
-                <div className="font-label text-[10px] text-outline/70 uppercase tracking-[0.2em] mb-2">{hph.era}</div>
-                <div className="greek-meander-soft w-full opacity-50 mb-2" aria-hidden="true" />
-                <p className="font-body text-[11px] text-on-surface-variant leading-relaxed text-left">{bio.slice(0, 200)}{bio.length > 200 ? "…" : ""}</p>
+              {/* Text info */}
+              <div className="w-full px-5 py-4">
+                <div className="flex items-baseline gap-2 mb-0.5">
+                  <div className="font-display text-xl leading-tight" style={{ color: hph.accent }}>{hph.name}</div>
+                  <div className="font-label text-[9px] text-outline/60 uppercase tracking-[0.22em]">{hph.era}</div>
+                </div>
+                <div className="greek-meander-soft w-full opacity-40 my-2" aria-hidden="true" />
+                <p className="font-body text-[12px] text-on-surface-variant/90 leading-relaxed">{bio.slice(0, 210)}{bio.length > 210 ? "…" : ""}</p>
               </div>
             </div>
           );
