@@ -155,6 +155,70 @@
     pointer-events: none;
   }
 
+  .landing-sanctuary-shell {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(228, 180, 94, 0.12) 0%, rgba(228, 180, 94, 0.04) 18%, transparent 42%),
+      linear-gradient(180deg, #090807 0%, #0b0a09 44%, #0c0e0f 100%);
+  }
+
+  .landing-sanctuary-shell::before,
+  .landing-sanctuary-shell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .landing-sanctuary-shell::before {
+    inset: 0 0 auto 0;
+    height: min(1520px, 150vh);
+    z-index: 0;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(5, 4, 4, 0.24) 0%,
+        rgba(5, 4, 4, 0.10) 18%,
+        rgba(5, 4, 4, 0.18) 52%,
+        rgba(12, 14, 15, 0.94) 100%
+      ),
+      url("/assets/landing/cathedral-threshold.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center top;
+    opacity: 0.96;
+    transform: scale(1.02);
+    transform-origin: center top;
+    filter: sepia(0.08) saturate(0.98) contrast(1.07) brightness(0.92);
+    -webkit-mask-image: linear-gradient(180deg, black 0%, black 56%, rgba(0, 0, 0, 0.82) 74%, transparent 100%);
+    mask-image: linear-gradient(180deg, black 0%, black 56%, rgba(0, 0, 0, 0.82) 74%, transparent 100%);
+  }
+
+  .landing-sanctuary-shell::after {
+    z-index: 0;
+    background:
+      radial-gradient(circle at 50% 10%, rgba(255, 216, 150, 0.18) 0%, rgba(255, 216, 150, 0.07) 16%, transparent 34%),
+      radial-gradient(circle at 50% 34%, rgba(255, 232, 188, 0.06) 0%, transparent 30%),
+      linear-gradient(
+        180deg,
+        rgba(6, 5, 5, 0.12) 0%,
+        rgba(6, 5, 5, 0.04) 14%,
+        rgba(8, 7, 7, 0.14) 30%,
+        rgba(9, 9, 9, 0.56) 58%,
+        rgba(12, 14, 15, 0.92) 82%,
+        #0c0e0f 100%
+      );
+  }
+
+  @media (max-width: 768px) {
+    .landing-sanctuary-shell::before {
+      height: min(1180px, 122vh);
+      background-position: 54% top;
+      transform: scale(1.06);
+      -webkit-mask-image: linear-gradient(180deg, black 0%, black 48%, rgba(0, 0, 0, 0.82) 70%, transparent 100%);
+      mask-image: linear-gradient(180deg, black 0%, black 48%, rgba(0, 0, 0, 0.82) 70%, transparent 100%);
+    }
+  }
+
   /* Subtle marble/stone grain — applied to body bg or panels.
      Very low opacity SVG noise that suggests aged stone without
      overpowering the dark surface. */

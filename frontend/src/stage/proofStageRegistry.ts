@@ -199,7 +199,7 @@ function buildManifest(config: {
       avatar: {
         sheet: `${root}/avatar/sheet.png`,
         bustNeutral: `${root}/avatar/bust-neutral.png`,
-        bustActive: `${root}/avatar/bust-active.png`,
+        bustActive: `${root}/avatar/icon-master.png`,
         icon64: `${root}/avatar/icon-64.png`,
         icon128: `${root}/avatar/icon-128.png`,
         icon256: `${root}/avatar/icon-256.png`,

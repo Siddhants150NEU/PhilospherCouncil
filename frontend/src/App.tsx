@@ -1615,11 +1615,11 @@ export default function App() {
     const visitorName = (profileAnswers as any)?.name;
     const tone = problem.trim() ? classifyQuestion(problem) : null;
     return (
-      <div className="min-h-screen flex flex-col bg-surface-container-lowest font-body marble-grain">
+      <div className="landing-sanctuary-shell min-h-screen flex flex-col bg-surface-container-lowest font-body marble-grain relative isolate overflow-hidden">
         {/* Sticky Top App Bar — three columns: profile/library chips · brand · nav.
             Greek temple façade: Doric pediment crown above the brand, laurel
             sprigs flanking the icon, meander key band underneath. */}
-        <header className="sticky top-0 z-50 bg-surface-container-lowest/90 backdrop-blur-md border-b border-primary/20 shadow-sm">
+        <header className="sticky top-0 z-50 bg-surface-container-lowest/78 backdrop-blur-md border-b border-primary/20 shadow-sm relative">
           {/* Grid: side columns shrink to fit their content, center gets all
               remaining space so the headline + subtitle don't overflow at zoom. */}
           <div className="grid grid-cols-[auto_1fr_auto] items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-max-width mx-auto gap-3 sm:gap-4">
@@ -1672,7 +1672,7 @@ export default function App() {
         </header>
 
         {/* Main */}
-        <main className="flex-grow flex flex-col items-center px-margin-mobile md:px-margin-desktop py-12 max-w-max-width mx-auto w-full gap-12 md:gap-16 relative">
+        <main className="flex-grow flex flex-col items-center px-margin-mobile md:px-margin-desktop py-12 max-w-max-width mx-auto w-full gap-12 md:gap-16 relative z-10">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 ambient-glow -z-10" />
 
           {/* Council selection */}
@@ -1870,10 +1870,10 @@ export default function App() {
         })()}
 
         {/* Footer meander */}
-        <div className="greek-meander w-full mt-8 opacity-80" aria-hidden="true" />
+        <div className="greek-meander w-full mt-8 opacity-80 relative z-10" aria-hidden="true" />
 
         {/* Footer */}
-        <footer className="bg-surface-container-lowest text-on-surface-variant border-t border-primary/10 mt-auto">
+        <footer className="bg-surface-container-lowest/92 backdrop-blur-sm text-on-surface-variant border-t border-primary/10 mt-auto relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-gutter max-w-max-width mx-auto gap-4">
             <div className="font-label text-label-md font-bold text-primary flex-1 flex justify-start">The Philosophical Council</div>
             <div className="font-body text-label-sm text-center flex-1">© 2026 The Philosophical Council. Scriptorium Digital.</div>
